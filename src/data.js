@@ -3,7 +3,11 @@ const matchData = [
     "id": "Cruz Azul",
     "color": "#071F60",
     "line": "#DE1D3E",
-    logo: ()=>{ const image = new Image(); image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/6/6.png'; return image },
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/6/6.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -104,6 +108,11 @@ const matchData = [
     "id": "Club América",
     "color": "#01163F",
     "line": "#FEF100",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/1/1.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -199,6 +208,11 @@ const matchData = [
   {
     "id": "Puebla",
     "color": "#083E7C",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11550/11550.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -295,6 +309,11 @@ const matchData = [
     "id": "Monterrey",
     "color": "#0C2240",
     "line": "#D9A501",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/14/14.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -395,6 +414,11 @@ const matchData = [
     "id": "Santos Laguna",
     "color": "#1F833E",
     "line": "#FBB827",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/15/15.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -495,6 +519,11 @@ const matchData = [
     "id": "León",
     "color": "#1C7A54",
     line: "#FCC745",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/9/9.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -595,6 +624,11 @@ const matchData = [
     "id": "Atlas",
     "color": "#000000",
     "line": "#BF0412",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/10445/10445.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -695,6 +729,11 @@ const matchData = [
     "id": "Pachuca",
     "color": "#032577",
     line: "#cecece",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11/11.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -795,6 +834,11 @@ const matchData = [
     "id": "Guadalajara",
     "color": "#CF152D",
     line: "#042857",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/7/7.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -895,6 +939,11 @@ const matchData = [
     "id": "Tigres UANL",
     "color": "#0F54A2",
     line: "#F7B523",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/16/16.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -995,6 +1044,11 @@ const matchData = [
     "id": "Toluca",
     "color": "#CF152D",
     line: "#121C4F",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/17/17.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1095,6 +1149,11 @@ const matchData = [
     "id": "Querétaro",
     "color": "#0F56B8",
     line: "#1D100D",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/12037/12037.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1191,6 +1250,11 @@ const matchData = [
     "id": "Mazatlán",
     "color": "#523278",
     line: "#111821",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/12043/12043.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1291,6 +1355,11 @@ const matchData = [
     "id": "Club Tijuana",
     "color": "#E10618",
     line: "#0C0808",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/5/5.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1391,6 +1460,11 @@ const matchData = [
     "id": "Pumas UNAM",
     "color": "#79671A",
     line: "#032347",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/18/18.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1491,6 +1565,11 @@ const matchData = [
     "id": "Juárez",
     "color": "#D9232E",
     line: '#75BC1D',
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11790/11790.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1587,6 +1666,11 @@ const matchData = [
     "id": "Atlético San Luis",
     "color": "#2E315D",
     line: '#A9392B',
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11220/11220.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",
@@ -1682,6 +1766,11 @@ const matchData = [
   {
     "id": "Necaxa",
     "color": "#E4072C",
+    logo: (()=>{
+      const image = new Image();
+      image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/29/29.png';
+      return image;
+    })(),
     "data": [
       {
         "x": "2021-07-21",

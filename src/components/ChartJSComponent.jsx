@@ -2,27 +2,6 @@ import React from 'react';
 import {Bar} from 'react-chartjs-2';
 import {format} from 'date-fns';
 
-const images = {
-  'Cruz Azul': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/6/6.png',
-  'Club América': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/1/1.png',
-  'Puebla': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11550/11550.png',
-  'Monterrey': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/14/14.png',
-  'Santos Laguna': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/15/15.png',
-  'León': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/9/9.png',
-  'Atlas': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/10445/10445.png',
-  'Pachuca': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11/11.png',
-  'Guadalajara': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/7/7.png',
-  'Tigres UANL': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/16/16.png',
-  'Toluca': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/17/17.png',
-  'Querétaro': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/12037/12037.png',
-  'Mazatlán': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/12043/12043.png',
-  'Club Tijuana': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/5/5.png',
-  'Pumas UNAM': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/18/18.png',
-  'Juárez': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11790/11790.png',
-  'Atlético San Luis': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11220/11220.png',
-  'Necaxa': 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/29/29.png',
-}
-
 const allOffsets = {
   2: [
     -0.212,
@@ -138,17 +117,16 @@ const teamLogoPlugin = {
   id: 'teamLogo',
   afterDatasetDraw(chart){
     const { data: { datasets: tempTeams }, _metasets: metasets, ctx, scales: { x, y } } = chart;
-    ctx.save();
+    ctx.restore();
     const teams = tempTeams.filter( team=>!!team.data[0]);
     const offsets = allOffsets[teams.length];
     metasets.forEach( column => {
-      if(images[column.label] && teams.findIndex( t => t.label === column.label) !== -1){
-        const teamIndex = teams.findIndex( t => t.label === column.label);
-        const image = new Image();
-        image.src = images[column.label];
-        ctx.drawImage(image, x.getPixelForValue(offsets[teamIndex]), y.getPixelForValue(teams[teamIndex].data[0]) - (30/2), 30, 30);
+      const teamIndex = teams.findIndex( t => t.label === column.label);
+      if(teamIndex !== -1 && !!teams[teamIndex].logo){
+        ctx.drawImage(teams[teamIndex].logo, x.getPixelForValue(offsets[teamIndex]), y.getPixelForValue(teams[teamIndex].data[0]) - (30/2), 30, 30);
       }
-    })
+    });
+    ctx.save();
   }
 };
 
@@ -195,7 +173,7 @@ const getOptions = (type, teams) => ({
       labels: {
         sort: function(a, b, data){
           // console.log(a, b, data);
-          return data.datasets[b.datasetIndex].data.at(-1) - data.datasets[a.datasetIndex].data.at(-1);
+          return data.datasets[b.datasetIndex].data[0] - data.datasets[a.datasetIndex].data[0];
         }
       }
     },
@@ -210,26 +188,26 @@ const getOptions = (type, teams) => ({
         }
       }
     },
-    // labels: {
-    //   render: 'image',
-    //   textMargin: 10,
-    //   images: teams.map( team => {
-    //     console.log(team);
-    //     return {width: 20, height: 20, src: team.logo || null};
-    //   })
-    // },
+    title: {
+      display: true,
+      fullSize: true,
+      text: 'LigaMX Season 2020-2021',
+      font: { weight: 'bold', size: 20}
+    }
   },
 });
 
 const formatData = data => {
   initialData.labels = data[0].data.map(match => format(match.date, 'MM/dd/yyyy'));
   initialData.datasets = data.map(team => ({
+    ...team,
     label: team.id,
     data: team.data.map(match => match.y),
     fill: false,
     backgroundColor: team.color,
     borderColor: team.line,
     skipNull: true,
+    clip: 15,
   }));
   return initialData;
 };
