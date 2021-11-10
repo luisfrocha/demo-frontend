@@ -69,7 +69,7 @@ const formatData = data => {
 };
 
 export default function MainComponent() {
-  const [currentDateIndex, setCurrentDateIndex] = useState(4);
+  const [currentDateIndex, setCurrentDateIndex] = useState(0);
 
   const newData = formatData(data);
   const [scores] = useState(newData);
