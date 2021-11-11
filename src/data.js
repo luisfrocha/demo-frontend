@@ -1566,9 +1566,14 @@ const matchData = [
     "color": "#D9232E",
     line: '#75BC1D',
     logo: (()=>{
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       const image = new Image();
+      image.addEventListener('load', ()=>{
+        ctx.drawImage(image, 0, 0, 300, 150);
+      })
       image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11790/11790.png';
-      return image;
+      return canvas;
     })(),
     "data": [
       {
@@ -1667,9 +1672,14 @@ const matchData = [
     "color": "#2E315D",
     line: '#A9392B',
     logo: (()=>{
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       const image = new Image();
+      image.addEventListener('load', ()=>{
+        ctx.drawImage(image, 0, 0, 300, 150);
+      })
       image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/11220/11220.png';
-      return image;
+      return canvas;
     })(),
     "data": [
       {
@@ -1767,9 +1777,14 @@ const matchData = [
     "id": "Necaxa",
     "color": "#E4072C",
     logo: (()=>{
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       const image = new Image();
+      image.addEventListener('load', ()=>{
+        ctx.drawImage(image, 0, 0, 300, 150);
+      })
       image.src = 'https://s3.amazonaws.com/lmxwebsite/docs/archdgtl/AfldDrct/logos/29/29.png';
-      return image;
+      return canvas;
     })(),
     "data": [
       {

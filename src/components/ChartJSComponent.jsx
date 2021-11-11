@@ -4,8 +4,8 @@ import {format} from 'date-fns';
 
 const allOffsets = {
   2: [
-    -0.212,
-    0.19,
+    -0.21,
+    0.18,
   ],
   4: [
     -0.212,
@@ -14,11 +14,11 @@ const allOffsets = {
     0.19,
   ],
   6: [
-    -0.35,
+    -0.346,
     -0.218,
     -0.08,
     0.05,
-    0.185,
+    0.184,
     0.315,
   ],
   8: [
@@ -118,7 +118,7 @@ const teamLogoPlugin = {
   afterDatasetDraw(chart){
     const { data: { datasets: tempTeams }, _metasets: metasets, ctx, scales: { x, y } } = chart;
     ctx.restore();
-    const teams = tempTeams.filter( team=>!!team.data[0]);
+    const teams = tempTeams.filter( team=>team.data[0] !== null);
     const offsets = allOffsets[teams.length];
     metasets.forEach( column => {
       const teamIndex = teams.findIndex( t => t.label === column.label);
@@ -191,7 +191,7 @@ const getOptions = (type, teams) => ({
     title: {
       display: true,
       fullSize: true,
-      text: 'LigaMX Season 2020-2021',
+      text: 'LigaMX Season 2021-2022',
       font: { weight: 'bold', size: 20}
     }
   },
