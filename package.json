@@ -1,54 +1,26 @@
 {
-  "name": "apple-demo-frontend",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@craco/craco": "^6.4.0",
-    "@headlessui/react": "^1.4.2",
-    "@heroicons/react": "^1.0.5",
-    "@nivo/bump": "^0.74.0",
-    "@nivo/core": "^0.74.0",
-    "@nivo/line": "^0.74.0",
-    "@tailwindcss/forms": "^0.3.4",
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.10",
-    "chart.js": "^3.6.0",
-    "chartjs-plugin-labels": "^1.1.0",
-    "date-fns": "^2.25.0",
-    "react": "^17.0.2",
-    "react-chartjs-2": "^3.3.0",
-    "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
-    "web-vitals": "^1.0.1"
-  },
+  "name": "demo-frontend",
+  "version": "0.0.0",
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@headlessui/vue": "^1.4.2",
+    "@heroicons/vue": "^1.0.5",
+    "@j-t-mcc/vue3-chartjs": "^1.2.0",
+    "@supabase/supabase-js": "^1.29.3",
+    "chart.js": "^3.7.0",
+    "date-fns": "^2.28.0",
+    "vue": "^3.2.25",
+    "vue-router": "4"
   },
   "devDependencies": {
-    "autoprefixer": "^9",
-    "postcss": "^7",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat"
+    "@vitejs/plugin-vue": "^2.0.0",
+    "autoprefixer": "^10.4.2",
+    "postcss": "^8.4.5",
+    "tailwindcss": "^3.0.13",
+    "vite": "^2.7.2"
   }
 }
