@@ -55,7 +55,6 @@
     subscription.value = supabase
       .from(`team:league=eq.${route.params.league}`)
       .on('INSERT', payload => {
-        console.log(payload.new);
         teams.value.push(payload.new);
       })
       .on('UPDATE', payload => {

@@ -6,8 +6,6 @@ export const routes = [
     component: () => import('../components/PasswordReset.vue'),
     name: 'password_reset',
     beforeEnter(to, _from, next) {
-      console.log(to);
-      debugger;
       if (to.query.type === 'recovery') {
         next();
       } else {

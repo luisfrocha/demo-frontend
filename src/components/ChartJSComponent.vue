@@ -168,7 +168,6 @@
   };
   watchEffect(() => {
     const chart = chartJS.value;
-    console.log(chart);
     if (chart) {
       chart.data.labels = data.value.map(({ id }) => id);
       chart.data.datasets = [

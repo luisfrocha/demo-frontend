@@ -72,7 +72,6 @@ async function handlePasswordReset(redirectTo) {
   if (!email) {
     window.alert('Email address is required.');
   } else {
-    console.log(redirectTo)
     const { error } = await supabase.auth.api.resetPasswordForEmail(email, {redirectTo});
     if (error) {
       alert('Error: ' + error.message);
