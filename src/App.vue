@@ -9,10 +9,11 @@
 
   const navigation = ref(
     routes
+      .filter(route => !route.meta.hideInMenu)
       .map(route =>
         route.children && !route.path
           ? route.children.map(child => ({ name: child.name, to: child.path }))
-          : { name: route.name, to: route.path }
+          : { name: route.name, to: route.path, meta: route.meta }
       )
       .flat()
   );
@@ -44,14 +45,14 @@
                     :key="item.name"
                     :to="item.to"
                     :class="[
-                      item.to === route.fullPath
+                      item.to === route?.matched?.[0]?.path
                         ? 'bg-gray-700 text-white'
                         : 'text-white hover:bg-gray-500 hover:bg-opacity-75',
                       'rounded-md py-2 px-3 text-sm font-medium',
                     ]"
-                    :aria-current="item.to === route.fullPath ? 'page' : undefined"
+                    :aria-current="item.to === route?.matched?.[0]?.path ? 'page' : undefined"
                   >
-                    {{ item.name }}
+                    {{ item.meta.title }}
                   </router-link>
                 </div>
               </div>
@@ -77,14 +78,14 @@
               as="a"
               :href="item.to"
               :class="[
-                item.to === route.fullPath
+                item.to === route.matched[0].path
                   ? 'bg-gray-700 text-white'
                   : 'text-white hover:bg-gray-500 hover:bg-opacity-75',
                 'block rounded-md py-2 px-3 text-base font-medium',
               ]"
-              :aria-current="item.to === route.fullPath ? 'page' : undefined"
+              :aria-current="item.to === route.matched[0].path ? 'page' : undefined"
             >
-              {{ item.name }}
+              {{ item.meta.title }}
             </DisclosureButton>
           </div>
         </DisclosurePanel>
@@ -97,8 +98,8 @@
     </div>
 
     <main class="-mt-32">
-      <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-lg shadow px-5 py-6 sm:px-6 graph-container-div">
+      <div class="max-w-7xl mx-auto pb-12 px-2 sm:px-3 lg:px-4">
+        <div class="bg-white rounded-lg shadow px-2.5 py-3 sm:px-3 graph-container-div">
           <router-view />
         </div>
       </div>

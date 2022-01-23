@@ -75,7 +75,7 @@
             </div>
 
             <div class="text-sm">
-              <a class="font-medium text-amber-600 hover:text-amber-500" @click.prevent="handlePasswordReset">
+              <a class="font-medium text-amber-600 hover:text-amber-500" @click.prevent="handlePasswordReset('/admin')">
                 Forgot your password?
               </a>
             </div>

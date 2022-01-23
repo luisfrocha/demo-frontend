@@ -67,12 +67,13 @@ async function handleOAuthLogin(provider) {
 /**
  * Handles password reset. Will send an email to the given email address.
  */
-async function handlePasswordReset() {
+async function handlePasswordReset(redirectTo) {
   const email = prompt('Please enter your email:');
   if (!email) {
     window.alert('Email address is required.');
   } else {
-    const { error } = await supabase.auth.api.resetPasswordForEmail(email);
+    console.log(redirectTo)
+    const { error } = await supabase.auth.api.resetPasswordForEmail(email, {redirectTo});
     if (error) {
       alert('Error: ' + error.message);
     } else {
