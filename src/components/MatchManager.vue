@@ -1,9 +1,9 @@
 <script setup>
   import { TransitionRoot, Listbox, ListboxOptions, ListboxOption, ListboxButton, ListboxLabel } from '@headlessui/vue';
-  import { ref, onMounted, onUnmounted, computed } from 'vue';
+  import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
   import { PhotographIcon, ChevronDownIcon, CheckIcon } from '@heroicons/vue/outline';
   import { format, parseISO } from 'date-fns';
-  import { PlusIcon, MinusIcon } from '@heroicons/vue/solid';
+  import { PlusIcon, MinusIcon, RefreshIcon } from '@heroicons/vue/solid';
   import Datepicker from 'vue3-date-time-picker';
   import 'vue3-date-time-picker/dist/main.css';
   import { supabase } from '../lib/supabase';
@@ -24,6 +24,8 @@
   const newMatchVisitorId = ref(null);
   const newMatchStart = ref(null);
   const newScore = ref({});
+  const scoreInputs = ref({});
+  const savingScore = ref(false);
 
   const saveNewMatch = async () => {
     saveError.value = '';
@@ -46,9 +48,9 @@
       console.log(error);
     }
   };
-
-  onMounted(async () => {
+  const loadMatches = async () => {
     loadError.value = '';
+    loadingMatches.value = true;
     try {
       const { error, data: tempMatches } = await supabase
         .from('match')
@@ -66,7 +68,10 @@
     } finally {
       loadingMatches.value = false;
     }
+  };
 
+  onMounted(async () => {
+    loadMatches();
     loadError.value = '';
     try {
       const { error, data: tempTeams } = await supabase
@@ -106,12 +111,17 @@
         payload.new.host = teams.value.find(team => team.id === payload.new.host);
         payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
         payload.new.match_dt = parseISO(payload.new.match_dt);
+        payload.new.goals = [];
         matches.value.push(payload.new);
       })
-      .on('UPDATE', payload => {
+      .on('UPDATE', async payload => {
         payload.new.host = teams.value.find(team => team.id === payload.new.host);
         payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
         payload.new.match_dt = parseISO(payload.new.match_dt);
+        payload.new.goals = await supabase
+          .from('goal')
+          .select('id,team_id,score_minute')
+          .eq('match_id', payload.new.id);
         const index = matches.value.findIndex(match => match.id === payload.new.id);
         matches.value.splice(index, 1, payload.new);
       })
@@ -166,9 +176,10 @@
   const newMatchHost = computed(() => {
     return newMatchHostId.value ? teams.value.find(team => team.id === newMatchHostId.value) : {};
   });
+  const selectedTeams = computed(() => matches.value.map(match => [match.host.id, match.visitor.id]).flat());
 
   const filteredHostTeams = computed(() => {
-    return teams.value.filter(team => team.id !== newMatchVisitorId.value);
+    return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchVisitorId.value);
   });
 
   const newMatchVisitor = computed(() => {
@@ -176,11 +187,14 @@
   });
 
   const filteredVisitorTeams = computed(() => {
-    return teams.value.filter(team => team.id !== newMatchHostId.value);
+    return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchHostId.value);
   });
 
   const showNewScoreForm = (match, scorer) => {
-    newScore.value = { match_id: match.id, [`${scorer}_id`]: scorer };
+    newScore.value = { match_id: match.id, team_id: match[scorer].id, score_minute: null };
+    nextTick(() => {
+      scoreInputs.value[match.id].focus();
+    });
   };
 
   const reduceScore = async (match, scorer) => {
@@ -189,6 +203,22 @@
       .from('goal')
       .delete()
       .match({ id: scorerGoals[scorerGoals.length - 1].id });
+  };
+
+  const saveNewScore = async () => {
+    savingScore.value = true;
+    try {
+      const { error, data: newScoreResult } = await supabase.from('goal').insert(newScore.value).single();
+      if (error) {
+        console.log(error);
+      } else {
+        newScore.value = {};
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      savingScore.value = false;
+    }
   };
 </script>
 <template>
@@ -204,6 +234,7 @@
           <div class="ml-4 mt-2 flex-shrink-0">
             <TransitionRoot
               :show="!showNewMatchForm"
+              class="flex"
               enter="transition duration-150"
               enter-from="scale-0 opacity-0"
               enter-to="scale-100 opacity-100"
@@ -217,6 +248,17 @@
                 @click="activateNewMatchForm"
               >
                 Añadir Partido
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'relative inline-flex items-center px-2 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 h-full ml-1',
+                  loadingMatches && 'pointer-events-none opacity-50',
+                ]"
+                :disabled="loadingMatches"
+                @click="loadMatches"
+              >
+                <RefreshIcon class="h-4 w-4" />
               </button>
             </TransitionRoot>
           </div>
@@ -312,6 +354,61 @@
                       <span class="sr-only">Añadir gol</span>
                       <PlusIcon class="h-5 w-5" aria-hidden="true" />
                     </button>
+                    <TransitionRoot
+                      :show="!!newScore.match_id && newScore.match_id === match.id"
+                      as="template"
+                      enter="transition duration-150"
+                      enter-from="-translate-y-full opacity-0"
+                      enter-to="translate-y-0 opacity-100"
+                      leave="transition duration-150"
+                      leave-from="translate-y-0 opacity-100"
+                      leave-to="-translate-y-full opacity-0"
+                    >
+                      <div
+                        :class="[
+                          'absolute top-0 w-full h-full bg-white shadow sm:rounded-lg py-2.5 flex items-center justify-between space-x-3 border',
+                          newScore.team_id === match.visitor.id && 'flex-row-reverse',
+                        ]"
+                      >
+                        <div class="min-w-0 flex-1 flex items-center space-x-2 h-full px-2">
+                          <input
+                            v-model="newScore.score_minute"
+                            :ref="
+                              el => {
+                                scoreInputs[match.id] = el;
+                              }
+                            "
+                            type="number"
+                            name="score_minute"
+                            id="score_minute"
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md h-full text-center"
+                            placeholder="minuto"
+                          />
+                        </div>
+                        <div class="flex-shrink-0 p-2 align-center justify-center flex flex-col">
+                          <button
+                            type="button"
+                            :class="[
+                              'inline-flex items-center px-2.5 py-0 my-1 mt-2 border border-transparent text-xs font-medium rounded text-green-100 hover:text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hover:focus:ring-green-600 justify-center',
+                              (!newScore.score_minute || savingScore) && 'pointer-events-none opacity-50',
+                            ]"
+                            :disabled="!newScore.score_minute || savingScore"
+                            @click="saveNewScore"
+                          >
+                            <span class="text-sm font-medium text-gray-900"> Save </span>
+                          </button>
+                          <button
+                            type="button"
+                            :class="[
+                              'inline-flex items-center px-2.5 py-0 my-1 mb-2 border border-transparent text-xs font-medium rounded bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 hover:focus:ring-red-600 justify-center',
+                            ]"
+                            @click="newScore = {}"
+                          >
+                            <span class="text-sm font-medium text-white"> Cancel </span>
+                          </button>
+                        </div>
+                      </div>
+                    </TransitionRoot>
                   </nav>
                 </div>
               </div>
