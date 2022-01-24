@@ -2,6 +2,10 @@
   import { TransitionRoot, Listbox, ListboxOptions, ListboxOption, ListboxButton, ListboxLabel } from '@headlessui/vue';
   import { ref, onMounted, onUnmounted, computed } from 'vue';
   import { PhotographIcon, ChevronDownIcon, CheckIcon } from '@heroicons/vue/outline';
+  import { format, parseISO } from 'date-fns';
+  import { PlusIcon, MinusIcon } from '@heroicons/vue/solid';
+  import Datepicker from 'vue3-date-time-picker';
+  import 'vue3-date-time-picker/dist/main.css';
   import { supabase } from '../lib/supabase';
   import { useRoute } from 'vue-router';
 
@@ -12,12 +16,14 @@
   const saveError = ref('');
   const matchesSubscription = ref(null);
   const teamsSubscription = ref(null);
+  const goalsSubscription = ref(null);
   const showNewMatchForm = ref(false);
   const matches = ref([]);
   const teams = ref([]);
   const newMatchHostId = ref(null);
   const newMatchVisitorId = ref(null);
-  const newMatchStartTime = ref(null);
+  const newMatchStart = ref(null);
+  const newScore = ref({});
 
   const saveNewMatch = async () => {
     saveError.value = '';
@@ -28,8 +34,7 @@
           matchday: route.params.matchday,
           host: newMatchHostId.value,
           visitor: newMatchVisitorId.value,
-          match_date: newMatchStartTime.value,
-          match_time: newMatchStartTime.value,
+          match_dt: newMatchStart.value,
         })
         .single();
       if (error) {
@@ -47,12 +52,14 @@
     try {
       const { error, data: tempMatches } = await supabase
         .from('match')
-        .select('id,matchday,host(id,name,logo),visitor(id,name,logo),match_date,match_time')
-        .eq('matchday', route.params.matchday);
+        .select('id,matchday,host(id,name,logo),visitor(id,name,logo),match_dt,goals:goal(id,team_id,score_minute)')
+        .eq('matchday', route.params.matchday)
+        .order('match_dt', { ascending: true })
+        .order('score_minute', { foreignTable: 'goal', ascending: true });
       if (error) {
         loadError.value = error.message;
       } else {
-        matches.value = tempMatches;
+        matches.value = tempMatches.map(match => ({ ...match, match_dt: parseISO(match.match_dt) }));
       }
     } catch (error) {
       console.log(error);
@@ -77,12 +84,34 @@
       loadingTeams.value = false;
     }
 
-    matchesSubscription.value = supabase
-      .from(`match:league=eq.${route.params.league}`)
+    goalsSubscription.value = supabase
+      .from('goal')
       .on('INSERT', payload => {
+        const matchIndex = matches.value.findIndex(match => match.id === payload.new.match_id);
+        if (matchIndex > -1) {
+          matches.value[matchIndex].goals.push(payload.new);
+        }
+      })
+      .on('DELETE', payload => {
+        const matchIndex = matches.value.findIndex(match => match.id === payload.old.match_id);
+        if (matchIndex > -1) {
+          matches.value[matchIndex].goals = matches.value[matchIndex].goals.filter(goal => goal.id !== payload.old.id);
+        }
+      })
+      .subscribe();
+
+    matchesSubscription.value = supabase
+      .from(`match:matchday=eq.${route.params.matchday}`)
+      .on('INSERT', payload => {
+        payload.new.host = teams.value.find(team => team.id === payload.new.host);
+        payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
+        payload.new.match_dt = parseISO(payload.new.match_dt);
         matches.value.push(payload.new);
       })
       .on('UPDATE', payload => {
+        payload.new.host = teams.value.find(team => team.id === payload.new.host);
+        payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
+        payload.new.match_dt = parseISO(payload.new.match_dt);
         const index = matches.value.findIndex(match => match.id === payload.new.id);
         matches.value.splice(index, 1, payload.new);
       })
@@ -98,6 +127,15 @@
         teams.value.push(payload.new);
       })
       .on('UPDATE', payload => {
+        matches.value = matches.value.map(match => {
+          if (match.host.id === payload.new.id) {
+            match.host = payload.new;
+          }
+          if (match.visitor.id === payload.new.id) {
+            match.visitor = payload.new;
+          }
+          return match;
+        });
         const index = teams.value.findIndex(team => team.id === payload.new.id);
         teams.value.splice(index, 1, payload.new);
       })
@@ -111,6 +149,7 @@
   onUnmounted(() => {
     supabase.removeSubscription(matchesSubscription.value);
     supabase.removeSubscription(teamsSubscription.value);
+    supabase.removeSubscription(goalsSubscription.value);
   });
 
   const activateNewMatchForm = () => {
@@ -139,6 +178,18 @@
   const filteredVisitorTeams = computed(() => {
     return teams.value.filter(team => team.id !== newMatchHostId.value);
   });
+
+  const showNewScoreForm = (match, scorer) => {
+    newScore.value = { match_id: match.id, [`${scorer}_id`]: scorer };
+  };
+
+  const reduceScore = async (match, scorer) => {
+    const scorerGoals = match.goals.filter(goal => goal.team_id === match[scorer].id);
+    await supabase
+      .from('goal')
+      .delete()
+      .match({ id: scorerGoals[scorerGoals.length - 1].id });
+  };
 </script>
 <template>
   <div class="bg-white shadow rounded-lg divide-y divide-gray-200">
@@ -177,8 +228,8 @@
           :key="match.id"
           class="col-span-1 flex flex-col text-center bg-white rounded-lg shadow divide-y divide-gray-200"
         >
-          <div class="flex">
-            <div class="flex-1 flex flex-col p-8">
+          <div class="flex flex-wrap">
+            <div class="flex-1 flex flex-col py-1">
               <img
                 class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl"
                 :src="match.host.logo.replace(/^data:image\/[^;]+/, 'data:application/octet-stream')"
@@ -186,7 +237,7 @@
               />
               <h3 class="mt-6 text-gray-900 text-sm font-medium">{{ match.host.name }}</h3>
             </div>
-            <div class="flex-1 flex flex-col p-8">
+            <div class="flex-1 flex flex-col py-1">
               <img
                 class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl"
                 :src="match.visitor.logo.replace(/^data:image\/[^;]+/, 'data:application/octet-stream')"
@@ -194,10 +245,81 @@
               />
               <h3 class="mt-6 text-gray-900 text-sm font-medium">{{ match.visitor.name }}</h3>
             </div>
+            <div
+              class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mx-auto w-full"
+            >
+              <div class="flex-1 flex justify-between sm:hidden w-full">
+                <a
+                  href="#"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Reducir
+                </a>
+                <a
+                  href="#"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Añadir
+                </a>
+              </div>
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
+                <div class="w-full">
+                  <nav class="relative z-0 inline-flex rounded-md mx-auto" aria-label="Pagination">
+                    <button
+                      :class="[
+                        'relative inline-flex items-center px-2 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 my-4',
+                        match.goals.filter(goal => goal.team_id === match.host.id).length === 0 &&
+                          'pointer-events-none opacity-50',
+                      ]"
+                      :disabled="match.goals.filter(goal => goal.team_id === match.host.id).length === 0"
+                      @click="reduceScore(match, 'host')"
+                    >
+                      <span class="sr-only">Reducir Marcador</span>
+                      <MinusIcon class="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <span class="relative inline-flex items-center px-4 py-2 bg-white text-4xl font-bold text-gray-700">
+                      {{ match.goals.filter(goal => goal.team_id === match.host.id).length }}
+                    </span>
+                    <button
+                      class="relative inline-flex items-center px-2 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 my-4"
+                      @click="showNewScoreForm(match, 'host')"
+                    >
+                      <span class="sr-only">Añadir Gol</span>
+                      <PlusIcon class="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <span class="relative inline-flex items-center px-4 py-2 bg-white text-xl font-bold text-gray-700">
+                      -
+                    </span>
+                    <button
+                      :class="[
+                        'relative inline-flex items-center px-2 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 my-4',
+                        match.goals.filter(goal => goal.team_id === match.visitor.id).length === 0 &&
+                          'pointer-events-none opacity-50',
+                      ]"
+                      :disabled="match.goals.filter(goal => goal.team_id === match.visitor.id).length === 0"
+                      @click="reduceScore(match, 'visitor')"
+                    >
+                      <span class="sr-only">Reducir Marcador</span>
+                      <MinusIcon class="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <span class="relative inline-flex items-center px-4 py-2 bg-white text-4xl font-bold text-gray-700">
+                      {{ match.goals.filter(goal => goal.team_id === match.visitor.id).length }}
+                    </span>
+                    <button
+                      class="relative inline-flex items-center px-2 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 my-4"
+                      @click="showNewScoreForm(match, 'visitor')"
+                    >
+                      <span class="sr-only">Añadir gol</span>
+                      <PlusIcon class="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
           </div>
-          <dl class="mt-1 flex-grow flex flex-col justify-between">
+          <dl class="mt-1 flex-grow flex flex-col justify-center align-center">
             <dt class="sr-only">Empieza</dt>
-            <dd class="text-gray-500 text-sm">{{ match.match_date }} {{ match.match_time }}</dd>
+            <dd class="text-gray-500 text-md font-bold">{{ format(match.match_dt, 'Pp') }}</dd>
           </dl>
         </li>
         <TransitionRoot
@@ -214,8 +336,8 @@
             key="new_match"
             class="col-span-1 flex flex-col text-left bg-white rounded-lg shadow divide-y divide-gray-200"
           >
-            <div class="flex">
-              <div class="flex-1 flex flex-col px-4 py-3">
+            <div class="flex flex-wrap">
+              <div class="flex-1 flex flex-col py-1">
                 <img
                   v-if="newMatchHostId"
                   class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl"
@@ -223,7 +345,7 @@
                   alt="Local"
                 />
                 <PhotographIcon v-else class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl" />
-                <h3 class="mt-6 text-gray-900 text-sm font-medium">
+                <h3 class="mt-2 mx-2 text-gray-900 text-sm font-medium">
                   <Listbox as="div" v-model="newMatchHostId">
                     <ListboxLabel class="sr-only"> Selecciona Equipo Local </ListboxLabel>
                     <div class="relative">
@@ -249,7 +371,7 @@
                         leave-to-class="opacity-0"
                       >
                         <ListboxOptions
-                          class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-auto bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none max-h-48"
                         >
                           <ListboxOption
                             as="template"
@@ -282,7 +404,7 @@
                   </Listbox>
                 </h3>
               </div>
-              <div class="flex-1 flex flex-col px-4 py-3">
+              <div class="flex-1 flex flex-col py-1">
                 <img
                   v-if="newMatchVisitorId"
                   class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl"
@@ -290,7 +412,7 @@
                   alt="Visitante"
                 />
                 <PhotographIcon v-else class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl" />
-                <h3 class="mt-6 text-gray-900 text-sm font-medium">
+                <h3 class="mt-2 text-gray-900 text-sm font-medium mx-2">
                   <Listbox as="div" v-model="newMatchVisitorId">
                     <ListboxLabel class="sr-only"> Selecciona Visitante </ListboxLabel>
                     <div class="relative w-full">
@@ -316,7 +438,7 @@
                         leave-to-class="opacity-0"
                       >
                         <ListboxOptions
-                          class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-auto bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none max-h-48"
                         >
                           <ListboxOption
                             as="template"
@@ -349,6 +471,7 @@
                   </Listbox>
                 </h3>
               </div>
+              <div class="flex-1 flex flex-col px-6 py-3 grow-1"><Datepicker v-model="newMatchStart" /></div>
             </div>
             <div class="-mt-px flex divide-x divide-gray-200">
               <div class="w-0 flex-1 flex">
@@ -363,9 +486,9 @@
                 <button
                   :class="[
                     'relative w-0 flex-1 inline-flex items-center justify-center py-1 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500 bg-green-100 hover:bg-green-200 transition duration-200',
-                    (!newMatchLogo || !newMatchName) && 'pointer-events-none opacity-50',
+                    (!newMatchHostId || !newMatchVisitorId || !newMatchStart) && 'pointer-events-none opacity-50',
                   ]"
-                  :disabled="!newMatchLogo || !newMatchName"
+                  :disabled="!newMatchHostId || !newMatchVisitorId || !newMatchStart"
                   @click="saveNewMatch"
                 >
                   Guardar
