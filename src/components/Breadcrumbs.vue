@@ -137,11 +137,14 @@
   watch(
     () => selectedLeague.value,
     league => {
-      router.push(league ? `/${league}` : '/');
-      leagueHovered.value = false;
-      if (league) {
-        loadLeagueSeasons(league);
-      }
+      selectedSeason.value = null;
+      nextTick(() => {
+        router.push(league ? `/${league}` : '/');
+        leagueHovered.value = false;
+        if (league) {
+          loadLeagueSeasons(league);
+        }
+      });
     }
   );
 
@@ -282,7 +285,7 @@
               leave-from="translate-x-0 opacity-100"
               leave-to="-translate-x-full opacity-0"
             >
-              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedLeague = undefined">
+              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedLeague = null">
                 <XCircleIcon class="ml-1 my-auto h-4 w-4" />
               </div>
             </TransitionRoot>
@@ -318,8 +321,8 @@
                         : seasons.length > 0
                         ? selectedSeason
                           ? ''
-                          : 'Selecciona liga'
-                        : 'No hay ligas disponibles'
+                          : 'Selecciona temporada'
+                        : 'No hay temporadas disponibles'
                     }}
                   </span>
                   <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -378,7 +381,7 @@
               leave-from="translate-x-0 opacity-100"
               leave-to="-translate-x-full opacity-0"
             >
-              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedSeason = undefined">
+              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedSeason = null">
                 <XCircleIcon class="ml-1 my-auto h-4 w-4" />
               </div>
             </TransitionRoot>
