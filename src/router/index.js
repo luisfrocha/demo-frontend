@@ -2,19 +2,6 @@ import {createRouter, createWebHistory} from 'vue-router';
 
 export const routes = [
   {
-    path: '/',
-    component: () => import('../components/PasswordReset.vue'),
-    name: 'password_reset',
-    beforeEnter(to, _from, next) {
-      if (to.query.type === 'recovery') {
-        next();
-      } else {
-        next({name: 'matches', query: to.query});
-      }
-    }, meta: {hideInMenu: true, title: 'Cambiar Contraseña'}
-  },
-  {path: '/', component: () => import('../pages/Matches.vue'), name: 'matches', meta: {title: 'Partidos'}},
-  {
     path: '/admin',
     component: () => import('../pages/admin/Admin.vue'),
     name: 'admin',
@@ -27,7 +14,7 @@ export const routes = [
         meta: { title: 'Seleccionar Liga'},
         children: [
           {
-            path: ':league',
+            path: ':league?',
             component: () => import('../components/SeasonContainer.vue'),
             name: 'league',
             meta: {title: 'Editando Liga'},
@@ -45,13 +32,13 @@ export const routes = [
                 meta: { title: 'Editando Equipos'}
               },
               {
-                path: ':season',
+                path: ':season?',
                 component: () => import('../components/MatchDayManager.vue'),
                 name: 'Temporada',
                 meta: {title: 'Editando Temporada'},
                 children: [
                   {
-                    path: ':matchday',
+                    path: ':matchday?',
                     component: ()=>import('../components/MatchManager.vue'),
                     name: 'matches',
                     meta: { title: 'Editar Partidos' },
@@ -62,6 +49,29 @@ export const routes = [
           }
         ]
       },
+    ]
+  },
+  {
+    path: '',
+    component: () => import('../components/PasswordReset.vue'),
+    name: 'password_reset',
+    beforeEnter(to, _from, next) {
+      if (to.query.type === 'recovery') {
+        next();
+      } else {
+        next({name: 'matches', query: to.query});
+      }
+    },
+    meta: { hideInMenu: true, title: 'Cambiar Contraseña' }
+  },
+  {
+    path: '/:league?/:season?',
+    navPath: '/',
+    component: () => import('../pages/Matches.vue'),
+    name: 'matches',
+    meta: { title: 'Partidos' },
+    children: [
+
     ]
   },
 ];

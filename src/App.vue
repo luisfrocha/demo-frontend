@@ -9,12 +9,8 @@
 
   const navigation = ref(
     routes
-      .filter(route => !route.meta.hideInMenu)
-      .map(route =>
-        route.children && !route.path
-          ? route.children.map(child => ({ name: child.name, to: child.path }))
-          : { name: route.name, to: route.path, meta: route.meta }
-      )
+      .filter(route => !!route.children)
+      .map(route => ({ name: route.name, to: route.navPath || route.path, meta: route.meta }))
       .flat()
   );
 </script>
@@ -31,26 +27,19 @@
             class="relative h-16 flex items-center justify-between lg:border-b lg:border-gray-300 lg:border-opacity-25"
           >
             <div class="px-2 flex items-center lg:px-0">
-              <div class="flex-shrink-0">
-                <img
-                  class="block h-8 w-8"
-                  src="https://tailwindui.com/img/logos/workflow-mark-gray-300.svg"
-                  alt="Workflow"
-                />
-              </div>
-              <div class="hidden lg:block lg:ml-10">
-                <div class="flex space-x-4">
+              <div class="hidden lg:block lg:ml-2">
+                <div class="flex space-x-4 flex-row-reverse">
                   <router-link
                     v-for="item in navigation"
                     :key="item.name"
                     :to="item.to"
                     :class="[
-                      item.to === route?.matched?.[0]?.path
-                        ? 'bg-gray-700 text-white'
-                        : 'text-white hover:bg-gray-500 hover:bg-opacity-75',
-                      'rounded-md py-2 px-3 text-sm font-medium',
+                      item.name === route?.matched?.[0]?.name
+                        ? 'bg-gray-700 text-white pointer-events-none'
+                        : 'text-white hover:bg-gray-600 hover:bg-opacity-75',
+                      'rounded-md py-2 px-3 text-sm font-medium mx-1',
                     ]"
-                    :aria-current="item.to === route?.matched?.[0]?.path ? 'page' : undefined"
+                    :aria-current="item.name === route?.matched?.[0]?.name ? 'page' : undefined"
                   >
                     {{ item.meta.title }}
                   </router-link>

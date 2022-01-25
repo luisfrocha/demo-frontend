@@ -1,4 +1,5 @@
 <template>
+  <Breadcrumbs />
   <ChartJSComponent class="chart" :options="scoreData" :data="scoreData" />
   <div class="flex justify-between mt-3">
     <button
@@ -49,7 +50,7 @@
   </div>
 </template>
 <script setup>
-  import { onMounted, ref, computed, reactive } from 'vue';
+  import { ref, computed } from 'vue';
   import { isEqual, parseISO, getTime, format, closestIndexTo } from 'date-fns';
   import {
     ChevronRightIcon,
@@ -59,6 +60,7 @@
   } from '@heroicons/vue/solid';
   import ChartJSComponent from '../components/ChartJSComponent.vue';
   import data from '../data';
+  import Breadcrumbs from '../components/Breadcrumbs.vue';
 
   const currentDateIndex = ref(0);
 
