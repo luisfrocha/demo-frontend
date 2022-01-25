@@ -25,14 +25,14 @@
   const leagues = ref([]);
   const loadingLeagues = ref(true);
   const loadLeaguesError = ref('');
-  const selectedLeague = ref(route?.params?.league || null);
+  const selectedLeague = ref(+route?.params?.league || null);
   const leagueHovered = ref(false);
   const leagueSubscription = ref(null);
 
   const seasons = ref([]);
   const loadingSeasons = ref(false);
   const loadSeasonsError = ref('');
-  const selectedSeason = ref(route?.params?.season || null);
+  const selectedSeason = ref(+route?.params?.season || null);
   const seasonHovered = ref(false);
   const seasonSubscription = ref(null);
 
@@ -221,7 +221,7 @@
                       loadingLeagues
                         ? 'Cargando ligas...'
                         : selectedLeague
-                        ? leagues.find(league => league.id === selectedLeague)?.name
+                        ? selectedLeagueInfo.name
                         : leagues.length > 0
                         ? selectedLeague
                           ? ''
@@ -317,7 +317,7 @@
                       loadingSeasons
                         ? 'Cargando temporadas...'
                         : selectedSeason
-                        ? seasons.find(season => season.id === selectedSeason)?.name
+                        ? selectedSeasonInfo.name
                         : seasons.length > 0
                         ? selectedSeason
                           ? ''
