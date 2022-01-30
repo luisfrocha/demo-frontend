@@ -16,7 +16,7 @@
 </script>
 <template>
   <div class="min-h-full">
-    <div class="bg-gray-500 pb-32">
+    <div class="bg-gray-500 pb-8">
       <Disclosure
         as="nav"
         class="bg-gray-500 border-b border-gray-400 border-opacity-25 lg:border-none"
@@ -86,9 +86,9 @@
       </header>
     </div>
 
-    <main class="-mt-32">
-      <div class="max-w-7xl mx-auto pb-12 px-2 sm:px-3 lg:px-4">
-        <div class="bg-white rounded-lg shadow px-2.5 py-3 sm:px-3 graph-container-div">
+    <main class="-mt-12">
+      <div class="max-w-7xl mx-auto pb-12 px-1 sm:px-3 lg:px-4">
+        <div class="bg-white rounded-lg shadow p-2 graph-container-div">
           <router-view />
         </div>
       </div>

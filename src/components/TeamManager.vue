@@ -20,9 +20,9 @@
   const saveNewTeam = async () => {
     saveError.value = '';
     try {
-      let { error, data: newTeam } = await supabase
+      let { error } = await supabase
         .from('team')
-        .insert({ name: newTeamName.value, league: selectedLeague.value, logo: newTeamLogo.value })
+        .insert({ name: newTeamName.value, league_id: selectedLeague.value, logo: newTeamLogo.value })
         .single();
       if (error) {
         saveError.value = error.message;
@@ -40,7 +40,7 @@
       const { error, data: tempTeams } = await supabase
         .from('team')
         .select('id,name,logo')
-        .eq('league', route.params.league);
+        .eq('league_id', route.params.league);
       if (error) {
         loadError.value = error.message;
       } else {
@@ -53,7 +53,7 @@
     }
 
     subscription.value = supabase
-      .from(`team:league=eq.${route.params.league}`)
+      .from(`team:league_id=eq.${route.params.league}`)
       .on('INSERT', payload => {
         teams.value.push(payload.new);
       })
@@ -77,7 +77,15 @@
     newTeamLogo.value = null;
     showNewTeamForm.value = true;
     nextTick(() => {
-      newTeamNameRef.value.focus();
+      const container = document.getElementById('new_team_li');
+      window.scrollTo({
+        top: container.offsetTop,
+        left: container.offsetLeft,
+        behavior: 'smooth',
+      });
+      setTimeout(() => {
+        newTeamNameRef.value.focus();
+      }, 750);
     });
   };
   const cancelNewTeam = () => {
@@ -88,8 +96,8 @@
 </script>
 <template>
   <div class="bg-white shadow rounded-lg divide-y divide-gray-200">
-    <div class="px-2 py-3 sm:px-3">
-      <div class="bg-white px-4 py-5 border-b border-gray-200 sm:px-6">
+    <div class="p-2">
+      <div class="bg-white p-0 border-b border-gray-200 pb-2">
         <div class="-ml-4 -mt-2 flex items-center justify-between flex-wrap sm:flex-nowrap">
           <div class="ml-4 mt-2">
             <h3 class="text-lg leading-6 font-medium text-gray-900 my-1">Equipos</h3>
@@ -141,6 +149,7 @@
           leave-to="scale-0 opacity-0"
         >
           <li
+            id="new_team_li"
             key="new_team"
             class="col-span-1 flex flex-col text-center bg-white rounded-lg shadow divide-y divide-gray-200"
           >

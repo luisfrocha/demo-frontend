@@ -4,6 +4,7 @@
   import { TransitionRoot, ListboxLabel, ListboxButton, ListboxOption, ListboxOptions, Listbox } from '@headlessui/vue';
   import { supabase } from '../lib/supabase';
   import { useRoute, useRouter } from 'vue-router';
+  import MatchManager from './MatchManager.vue';
 
   const matchdays = ref([]);
   const showNewMatchday = ref(false);
@@ -34,16 +35,12 @@
     });
   };
 
-  watch(selectedMatchday, val => {
-    router.push(`/admin/${route.params.league}/${route.params.season}/${val}`);
-  });
-
   const saveNewMatchday = async () => {
     saveError.value = '';
     try {
       let { error, data: newMatchday } = await supabase
         .from('matchday')
-        .insert({ name: matchdayName.value, season: selectedSeason.value })
+        .insert({ name: matchdayName.value, season_id: selectedSeason.value, sort_order: matchdays.value.length + 1 })
         .single();
       if (error) {
         saveError.value = error.message;
@@ -51,6 +48,8 @@
         selectedMatchday.value = newMatchday.id;
         nextTick(() => {
           cancelNewMatchday();
+          router.push(`/admin/${route.params.league}/${route.params.season}/${newMatchday.id}`);
+          matchdays.value.push(newMatchday);
         });
       }
     } catch (error) {
@@ -61,7 +60,10 @@
   onMounted(async () => {
     loadError.value = '';
     try {
-      const { error, data: tempMatchdays } = await supabase.from('matchday').select('id,name');
+      const { error, data: tempMatchdays } = await supabase
+        .from('matchday')
+        .select('id,name,sort_order')
+        .eq('season_id', route.params.season);
       if (error) {
         loadError.value = error.message;
       } else {
@@ -80,7 +82,7 @@
     }
 
     subscription.value = supabase
-      .from('matchday')
+      .from(`matchday:season_id.eq=${route.params.season}`)
       .on('INSERT', async payload => {
         matchdays.value.push(payload.new);
       })
@@ -101,7 +103,7 @@
 </script>
 <template>
   <div class="bg-white shadow rounded-lg divide-y divide-gray-200">
-    <div class="px-2 py-1 sm:px-3">
+    <div class="px-2 py-1">
       <div class="flex justify-between align-center relative">
         <div class="block text-sm font-medium text-gray-700 leading-3 py-1">
           <Listbox as="div" v-model="selectedMatchday">
@@ -117,7 +119,7 @@
                   >
                     <div>{{ matchdays.length > 0 ? 'Jornada seleccionada:' : 'Añade la primer jornada' }}</div>
                     <p v-if="matchdays.length > 0" class="ml-2.5 text-sm font-medium">
-                      {{ selectedMatchday ? matchdays.find(season => season.id === selectedMatchday)?.name : '' }}
+                      {{ matchdays.find(season => season.id === +route.params.matchday)?.name }}
                     </p>
                   </div>
                   <ListboxButton
@@ -140,9 +142,9 @@
                 >
                   <ListboxOption
                     as="template"
-                    v-for="season in matchdays"
-                    :key="season.name"
-                    :value="season.id"
+                    v-for="matchday in matchdays"
+                    :key="matchday.name"
+                    :value="matchday.id"
                     v-slot="{ active, selected }"
                   >
                     <li
@@ -150,11 +152,12 @@
                         active ? 'text-white bg-indigo-500' : 'text-gray-900',
                         'cursor-default select-none relative p-2 text-sm',
                       ]"
+                      @click="router.push(`/admin/${route.params.league}/${route.params.season}/${matchday.id}`)"
                     >
                       <div class="flex flex-col">
                         <div class="flex justify-between">
                           <p :class="selected ? 'font-semibold' : 'font-normal'">
-                            {{ season.name }}
+                            {{ matchday.name }}
                           </p>
                           <span v-if="selected" :class="active ? 'text-white' : 'text-indigo-500'">
                             <CheckIcon class="h-5 w-5" aria-hidden="true" />
@@ -258,8 +261,11 @@
           </div>
         </div>
       </div>
-      <div v-if="selectedMatchday" class="px-2 py-2.5 sm:p-3">
-        <router-view />
+      <div class="p-1">
+        <MatchManager
+          v-if="selectedMatchday"
+          :matchday="matchdays.find(matchday => matchday.id === +selectedMatchday)"
+        />
       </div>
     </div>
   </div>

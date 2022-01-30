@@ -3,50 +3,86 @@ import {createRouter, createWebHistory} from 'vue-router';
 export const routes = [
   {
     path: '/admin',
-    component: () => import('../pages/admin/Admin.vue'),
+    component: () => import('../pages/Admin.vue'),
     name: 'admin',
-    meta: {title: 'Administra tus Ligas'},
+    meta: {title: 'Administra Ligas'},
     children: [
       {
         path: '',
         component: ()=>import('../components/LeagueManager.vue'),
         name: 'league-selector',
-        meta: { title: 'Seleccionar Liga'},
+        meta: { title: 'Seleccionar Liga' },
+      },
+      {
+        path: ':league',
+        component: ()=>import('../components/LeagueManager.vue'),
+        name: 'league-editor',
+        meta: { title: 'Ligas'},
         children: [
           {
-            path: ':league?',
-            component: () => import('../components/SeasonContainer.vue'),
-            name: 'league',
-            meta: {title: 'Editando Liga'},
+            path: '',
+            component: () => import('../components/SeasonManager.vue'),
+            name: 'season-selector',
+            meta: {title: 'Selecciona Temporada'},
             children: [
               {
                 path: '',
-                component: ()=>import('../components/SeasonManager.vue'),
-                name: 'season-editor',
-                meta: { title: 'Editando Temporadas'}
+                component: () => import('../components/SeasonContainer.vue'),
+                name: 'season-container',
+                meta: { title: 'Seleccionando temporada' },
               },
-              {
-                path: 'teams',
-                component: ()=>import('../components/TeamManager.vue'),
-                name: 'team-editor',
-                meta: { title: 'Editando Equipos'}
-              },
-              {
-                path: ':season?',
-                component: () => import('../components/MatchDayManager.vue'),
-                name: 'Temporada',
-                meta: {title: 'Editando Temporada'},
-                children: [
-                  {
-                    path: ':matchday?',
-                    component: ()=>import('../components/MatchManager.vue'),
-                    name: 'matches',
-                    meta: { title: 'Editar Partidos' },
-                  }
-                ]
-              }
             ]
-          }
+          },
+          {
+            path: 'teams',
+            component: ()=>import('../components/SeasonManager.vue'),
+            name: 'league-teams-editor',
+            meta: { title: 'Editor de equipos' },
+            children: [
+              {
+                path: '',
+                component: ()=>import('../components/TeamManager.vue'),
+                name: 'teams-editor',
+                meta: { title: 'Editor de equipos' },
+              },
+            ]
+          },
+          {
+            path: ':season',
+            component: () => import('../components/SeasonManager.vue'),
+            name: 'season-editor',
+            meta: {title: 'Editando Temporada'},
+            children: [
+                  {
+                    path: '',
+                    component: () => import('../components/SeasonContainer.vue'),
+                    name: 'season-selector-2',
+                    meta: {title: 'Editando Temporada'},
+                    children: [
+                      {
+                        path: ':matchday?',
+                        component: ()=>import('../components/MatchDayManager.vue'),
+                        name: 'matchday-manager',
+                        meta: {title: 'Selecciona Jornada'},
+                      }
+                    ]
+                  },
+                  // {
+                  //   path: ':matchday',
+                  //   component: () => import('../components/MatchDayManager.vue'),
+                  //   name: 'season-selector-2',
+                  //   meta: {title: 'Editando Temporada'},
+                  //   children: [
+                  //     {
+                  //       path: '',
+                  //       component: ()=>import('../components/MatchManager.vue'),
+                  //       name: 'matches',
+                  //       meta: { title: 'Editar Partidos' },
+                  //     }
+                  //   ]
+                  // }
+            ]
+          },
         ]
       },
     ]
@@ -67,11 +103,44 @@ export const routes = [
   {
     path: '/:league?/:season?',
     navPath: '/',
-    component: () => import('../pages/Matches.vue'),
+    component: () => import('../pages/Home.vue'),
     name: 'matches',
     meta: { title: 'Partidos' },
     children: [
-
+      {
+        path: '',
+        component: () => import('../components/Wrapper.vue'),
+        children:[
+          {
+            path: '',
+            component: () => import('../components/MatchDay.vue')
+          },
+          {
+            path: ':matchday?',
+            component: () => import('../components/MatchDay.vue'),
+            children: [
+              {
+                path: '',
+                name: 'position_table',
+                component: ()=>import('../components/MatchdayViews/Table.vue'),
+                meta: { title: 'Tabla General' }
+              },
+              {
+                path: 'puntos',
+                name: 'points_graph',
+                component: ()=>import('../components/MatchdayViews/Points.vue'),
+                meta: { title: 'Puntos' }
+              },
+              {
+                path: 'posicion',
+                name: 'position_graph',
+                component: ()=>import('../components/MatchdayViews/Positions.vue'),
+                meta: { title: 'Posición' }
+              },
+            ]
+          }
+        ]
+      },
     ]
   },
 ];

@@ -71,7 +71,7 @@
         const { error, data: tempSeasons } = await supabase
           .from('season')
           .select('id,name')
-          .eq('league', route.params.league);
+          .eq('league_id', route.params.league);
         if (error) {
           loadSeasonsError.value = error.message;
         } else {
@@ -103,25 +103,19 @@
       .subscribe();
 
     seasonSubscription.value = supabase
-      .from(`season`)
+      .from(`season:league_id=${route.params.league}`)
       .on('INSERT', payload => {
-        if (payload.new.league === +route.params.league) {
-          seasons.value.push(payload.new);
-        }
+        seasons.value.push(payload.new);
       })
       .on('UPDATE', payload => {
-        if (payload.new.league === +route.params.league) {
-          const index = seasons.value.findIndex(season => season.id === payload.new.id);
-          seasons.value.splice(index, 1, payload.new);
-        }
+        const index = seasons.value.findIndex(season => season.id === payload.new.id);
+        seasons.value.splice(index, 1, payload.new);
       })
       .on('DELETE', payload => {
-        if (payload.old.league === +route.params.league) {
-          const index = seasons.value.findIndex(season => season.id === payload.old.id);
-          seasons.value.splice(index, 1);
-          if (payload.old.id === +route.params.season) {
-            router.push('/');
-          }
+        const index = seasons.value.findIndex(season => season.id === payload.old.id);
+        seasons.value.splice(index, 1);
+        if (payload.old.id === +route.params.season) {
+          router.push('/');
         }
       })
       .subscribe();
@@ -162,7 +156,7 @@
   const loadLeagueSeasons = async league => {
     if (league) {
       try {
-        const { data: newSeasons } = await supabase.from('season').select('id,name').eq('league', league);
+        const { data: newSeasons } = await supabase.from('season').select('id,name').eq('league_id', league);
         seasons.value = newSeasons;
       } catch (error) {
         console.log(error);
@@ -175,7 +169,7 @@
   const loadSeasonMatchdays = async season => {
     if (season) {
       try {
-        const { data: newMatchdays } = await supabase.from('matchday').select('id,name').eq('season', season);
+        const { data: newMatchdays } = await supabase.from('matchday').select('id,name').eq('season_id', season);
         matchDays.value = newMatchdays;
       } catch (error) {
         console.log(error);
@@ -303,7 +297,10 @@
           </svg>
           <div
             v-if="route.params.league"
-            :class="['ml-3 text-sm font-medium text-gray-500 hover:text-gray-700 relative', selectedSeason && 'mr-2']"
+            :class="[
+              'ml-3 text-sm font-medium text-gray-500 hover:text-gray-700 relative transition duration-1000',
+              seasonHovered && 'mr-4',
+            ]"
             @mouseenter="seasonHovered = true"
             @mouseleave="seasonHovered = false"
           >
