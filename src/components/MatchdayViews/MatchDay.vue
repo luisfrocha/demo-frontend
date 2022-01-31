@@ -1,13 +1,14 @@
 <script setup>
   import { onMounted, ref, computed } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { supabase } from '../lib/supabase';
+  import { supabase } from '../../lib/supabase';
 
   const route = useRoute();
   const router = useRouter();
 
   const matchdays = ref([]);
   const matchdaySubscription = ref(null);
+  const selectedMatchday = ref(route?.params?.matchday || null);
 
   console.log(route);
 
@@ -23,14 +24,16 @@
         const { error, data } = await supabase
           .from('matchday')
           .select(
-            'id,name,season_id,sortOrder,matches:match(id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute))'
+            'id,name,season_id,sort_order,matches:match(id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute))'
           )
           .eq('season_id', route.params.season);
         if (error) {
           console.log(error);
         } else {
-          matchdays.value = data.sort((a, b) => a.sortOrder - b.sortOrder);
-          router.push(`/${route.params.league}/${route.params.season}/${matchdays.value[0].id}`);
+          matchdays.value = data.sort((a, b) => a.sort_order - b.sort_order);
+          if (!route.params.matchday) {
+            router.push(`/${route.params.league}/${route.params.season}/${data[0].id}`);
+          }
         }
       } catch (error) {
         console.log(error);
@@ -68,10 +71,11 @@
         :to="`/${route.params.league}/${route.params.season}/${matchday.id}`"
         aria-current="page"
         :class="[
-          'z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+          'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
           !dayIndex && 'rounded-l-md',
           matchdays.length > 0 && dayIndex === matchdays.length - 1 && 'rounded-r-md',
-          matchday.id === +route.params.matchday && 'pointer-events-none',
+          matchday.id === +route.params.matchday &&
+            'pointer-events-none z-10 bg-indigo-50 border-indigo-500 text-indigo-600',
         ]"
       >
         {{ dayIndex + 1 }}

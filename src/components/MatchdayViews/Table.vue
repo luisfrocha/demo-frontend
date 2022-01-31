@@ -3510,19 +3510,37 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th colspan="10 ">
-                  <ul class="symbology">
-                    <li><span class="colorVerde"> </span>Clasificado</li>
-
-                    <!--<li><span class="championship"></span>Libertadores</li>-->
-                    <!-- <li><span class="champions"></span>Campeones</li> -->
-                    <li><span class="colorAmarillo"></span>Reclasificado Local</li>
-                    <li><span class="colorAzul"></span>Reclasificado Visitante</li>
-
-                    <!--<if(parametros.actual.idTorneo != "47"){>
-                    <li> <span class="all"></span>Todos</li>
-                  <}>-->
-                  </ul>
+                <th colspan="10">
+                  <div class="mb-3 mt-2">
+                    <div class="relative">
+                      <div class="relative mx-auto px-2">
+                        <div class="max-w-4xl mx-auto">
+                          <dl class="rounded-lg bg-white shadow-lg sm:grid sm:grid-cols-3 max-h-10">
+                            <div
+                              class="flex flex-row border-b border-gray-100 p-1 justify-center sm:border-0 sm:border-r"
+                            >
+                              <dt class="order-2 text-md leading-1 font-medium text-gray-500">Clasificado</dt>
+                              <dd class="order-1 text-4xl font-extrabold text-green-500">&bullet;</dd>
+                            </div>
+                            <div
+                              class="flex flex-row border-t border-b border-gray-100 p-2 justify-center sm:border-0 sm:border-l sm:border-r"
+                            >
+                              <dt class="order-2 text-md leading-1 font-medium text-gray-500">Reclasificado Local</dt>
+                              <dd class="order-1 text-4xl font-extrabold text-red-500">&bullet;</dd>
+                            </div>
+                            <div
+                              class="flex flex-row border-t border-gray-100 p-2 justify-center sm:border-0 sm:border-l align-center"
+                            >
+                              <dt class="order-2 text-md leading-1 font-medium text-gray-500">
+                                Reclasificado Visitante
+                              </dt>
+                              <dd class="order-1 text-4xl font-extrabold text-blue-600">&bullet;</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </th>
                 <th colspan="8" class="local">Local</th>
                 <th colspan="10" class="visit orange-head">Visitante</th>

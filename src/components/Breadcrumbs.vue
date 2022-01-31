@@ -128,31 +128,6 @@
     });
   };
 
-  watch(
-    () => selectedLeague.value,
-    league => {
-      selectedSeason.value = null;
-      nextTick(() => {
-        router.push(league ? `/${league}` : '/');
-        leagueHovered.value = false;
-        if (league) {
-          loadLeagueSeasons(league);
-        }
-      });
-    }
-  );
-
-  watch(
-    () => selectedSeason.value,
-    season => {
-      router.push(season ? `/${route.params.league}/${season}` : `/${route.params.league}`);
-      seasonHovered.value = false;
-      if (season) {
-        loadSeasonMatchdays(season);
-      }
-    }
-  );
-
   const loadLeagueSeasons = async league => {
     if (league) {
       try {
@@ -248,6 +223,7 @@
                           active ? 'text-white bg-indigo-600' : 'text-gray-900',
                           'cursor-default select-none relative py-2 pl-3 pr-9',
                         ]"
+                        @click="router.push(`/${league.id}`)"
                       >
                         <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                           {{ league.name }}
@@ -284,105 +260,106 @@
               </div>
             </TransitionRoot>
           </div>
-          <svg
-            v-if="route.params.league"
-            class="flex-shrink-0 w-6 h-full text-gray-200"
-            viewBox="0 0 24 44"
-            preserveAspectRatio="none"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
-          </svg>
-          <div
-            v-if="route.params.league"
-            :class="[
-              'ml-3 text-sm font-medium text-gray-500 hover:text-gray-700 relative transition duration-1000',
-              seasonHovered && 'mr-4',
-            ]"
-            @mouseenter="seasonHovered = true"
-            @mouseleave="seasonHovered = false"
-          >
-            <Listbox as="div" v-model="selectedSeason">
-              <div class="my-2 relative">
-                <ListboxButton
-                  class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                >
-                  <span class="block truncate">
-                    {{
-                      loadingSeasons
-                        ? 'Cargando temporadas...'
-                        : selectedSeason
-                        ? selectedSeasonInfo.name
-                        : seasons.length > 0
-                        ? selectedSeason
-                          ? ''
-                          : 'Selecciona temporada'
-                        : 'No hay temporadas disponibles'
-                    }}
-                  </span>
-                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <SelectorIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </span>
-                </ListboxButton>
-
-                <transition
-                  leave-active-class="transition ease-in duration-100"
-                  leave-from-class="opacity-100"
-                  leave-to-class="opacity-0"
-                >
-                  <ListboxOptions
-                    class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                  >
-                    <ListboxOption
-                      as="template"
-                      v-for="season in seasons"
-                      :key="season.id"
-                      :value="season.id"
-                      v-slot="{ active, selected }"
-                    >
-                      <li
-                        :class="[
-                          active ? 'text-white bg-indigo-600' : 'text-gray-900',
-                          'cursor-default select-none relative py-2 pl-3 pr-9',
-                        ]"
-                      >
-                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                          {{ season.name }}
-                        </span>
-
-                        <span
-                          v-if="selected"
-                          :class="[
-                            active ? 'text-white' : 'text-indigo-600',
-                            'absolute inset-y-0 right-0 flex items-center pr-4',
-                          ]"
-                        >
-                          <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      </li>
-                    </ListboxOption>
-                  </ListboxOptions>
-                </transition>
-              </div>
-            </Listbox>
-            <TransitionRoot
-              v-if="selectedSeason"
-              as="template"
-              :show="seasonHovered"
-              enter="transition duration-150"
-              enter-from="-translate-x-full opacity-0"
-              enter-to="translate-x-0 opacity-100"
-              leave="transition duration-150"
-              leave-from="translate-x-0 opacity-100"
-              leave-to="-translate-x-full opacity-0"
+          <template v-if="route.params.league">
+            <svg
+              class="flex-shrink-0 w-6 h-full text-gray-200"
+              viewBox="0 0 24 44"
+              preserveAspectRatio="none"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
-              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedSeason = null">
-                <XCircleIcon class="ml-1 my-auto h-4 w-4" />
-              </div>
-            </TransitionRoot>
-          </div>
+              <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
+            </svg>
+            <div
+              :class="[
+                'ml-3 text-sm font-medium text-gray-500 hover:text-gray-700 relative transition duration-1000',
+                seasonHovered && 'mr-4',
+              ]"
+              @mouseenter="seasonHovered = true"
+              @mouseleave="seasonHovered = false"
+            >
+              <Listbox as="div" v-model="selectedSeason">
+                <div class="my-2 relative">
+                  <ListboxButton
+                    class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <span class="block truncate">
+                      {{
+                        loadingSeasons
+                          ? 'Cargando temporadas...'
+                          : selectedSeason
+                          ? selectedSeasonInfo.name
+                          : seasons.length > 0
+                          ? selectedSeason
+                            ? ''
+                            : 'Selecciona temporada'
+                          : 'No hay temporadas disponibles'
+                      }}
+                    </span>
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <SelectorIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </span>
+                  </ListboxButton>
+
+                  <transition
+                    leave-active-class="transition ease-in duration-100"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                  >
+                    <ListboxOptions
+                      class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                    >
+                      <ListboxOption
+                        as="template"
+                        v-for="season in seasons"
+                        :key="season.id"
+                        :value="season.id"
+                        v-slot="{ active, selected }"
+                      >
+                        <li
+                          :class="[
+                            active ? 'text-white bg-indigo-600' : 'text-gray-900',
+                            'cursor-default select-none relative py-2 pl-3 pr-9',
+                          ]"
+                          @click="router.push(`/${route.params.league}/${season.id}`)"
+                        >
+                          <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                            {{ season.name }}
+                          </span>
+
+                          <span
+                            v-if="selected"
+                            :class="[
+                              active ? 'text-white' : 'text-indigo-600',
+                              'absolute inset-y-0 right-0 flex items-center pr-4',
+                            ]"
+                          >
+                            <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        </li>
+                      </ListboxOption>
+                    </ListboxOptions>
+                  </transition>
+                </div>
+              </Listbox>
+              <TransitionRoot
+                v-if="selectedSeason"
+                as="template"
+                :show="seasonHovered"
+                enter="transition duration-150"
+                enter-from="-translate-x-full opacity-0"
+                enter-to="translate-x-0 opacity-100"
+                leave="transition duration-150"
+                leave-from="translate-x-0 opacity-100"
+                leave-to="-translate-x-full opacity-0"
+              >
+                <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedSeason = null">
+                  <XCircleIcon class="ml-1 my-auto h-4 w-4" />
+                </div>
+              </TransitionRoot>
+            </div>
+          </template>
         </div>
       </li>
     </ol>

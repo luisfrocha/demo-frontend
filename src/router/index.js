@@ -53,34 +53,20 @@ export const routes = [
             name: 'season-editor',
             meta: {title: 'Editando Temporada'},
             children: [
+              {
+                path: '',
+                component: () => import('../components/SeasonContainer.vue'),
+                name: 'season-selector-2',
+                meta: {title: 'Editando Temporada'},
+                children: [
                   {
-                    path: '',
-                    component: () => import('../components/SeasonContainer.vue'),
-                    name: 'season-selector-2',
-                    meta: {title: 'Editando Temporada'},
-                    children: [
-                      {
-                        path: ':matchday?',
-                        component: ()=>import('../components/MatchDayManager.vue'),
-                        name: 'matchday-manager',
-                        meta: {title: 'Selecciona Jornada'},
-                      }
-                    ]
-                  },
-                  // {
-                  //   path: ':matchday',
-                  //   component: () => import('../components/MatchDayManager.vue'),
-                  //   name: 'season-selector-2',
-                  //   meta: {title: 'Editando Temporada'},
-                  //   children: [
-                  //     {
-                  //       path: '',
-                  //       component: ()=>import('../components/MatchManager.vue'),
-                  //       name: 'matches',
-                  //       meta: { title: 'Editar Partidos' },
-                  //     }
-                  //   ]
-                  // }
+                    path: ':matchday?',
+                    component: ()=>import('../components/MatchDayManager.vue'),
+                    name: 'matchday-manager',
+                    meta: {title: 'Selecciona Jornada'},
+                  }
+                ]
+              },
             ]
           },
         ]
@@ -101,46 +87,61 @@ export const routes = [
     meta: { hideInMenu: true, title: 'Cambiar Contraseña' }
   },
   {
-    path: '/:league?/:season?',
+    path: '/',
+    navPath: '/',
+    component: ()=>import('../pages/Home.vue'),
+    name: 'Home',
+    meta: { title: 'Ligas' },
+  },
+  {
+    path: '/',
     navPath: '/',
     component: () => import('../pages/Home.vue'),
     name: 'matches',
     meta: { title: 'Partidos' },
     children: [
       {
-        path: '',
-        component: () => import('../components/Wrapper.vue'),
-        children:[
+        path: ':league',
+        component: ()=>import('../components/Wrapper.vue'),
+        name: 'league-selected',
+        meta: { title: 'Liga' },
+        children: [
           {
-            path: '',
-            component: () => import('../components/MatchDay.vue')
-          },
-          {
-            path: ':matchday?',
-            component: () => import('../components/MatchDay.vue'),
+            path: ':season',
+            component: ()=>import('../components/Wrapper.vue'),
+            name: 'season-wrapper',
+            meta: { title: 'Wrapper' },
             children: [
               {
-                path: '',
-                name: 'position_table',
-                component: ()=>import('../components/MatchdayViews/Table.vue'),
-                meta: { title: 'Tabla General' }
-              },
-              {
-                path: 'puntos',
-                name: 'points_graph',
-                component: ()=>import('../components/MatchdayViews/Points.vue'),
-                meta: { title: 'Puntos' }
-              },
-              {
-                path: 'posicion',
-                name: 'position_graph',
-                component: ()=>import('../components/MatchdayViews/Positions.vue'),
-                meta: { title: 'Posición' }
-              },
+                path: ':matchday',
+                component: ()=>import('../components/MatchdayViews/MatchDay.vue'),
+                name: 'matchday-selector',
+                meta: { title: 'Jornada' },
+                children: [
+                  {
+                    path: '',
+                    name: 'position_table',
+                    component: ()=>import('../components/MatchdayViews/Table.vue'),
+                    meta: { title: 'Tabla General' }
+                  },
+                  {
+                    path: 'puntos',
+                    name: 'points_graph',
+                    component: ()=>import('../components/MatchdayViews/Points.vue'),
+                    meta: { title: 'Puntos' }
+                  },
+                  {
+                    path: 'posicion',
+                    name: 'position_graph',
+                    component: ()=>import('../components/MatchdayViews/Positions.vue'),
+                    meta: { title: 'Posición' }
+                  },
+                ]
+              }
             ]
           }
         ]
-      },
+      }
     ]
   },
 ];
