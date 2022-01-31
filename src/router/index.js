@@ -110,8 +110,12 @@ export const routes = [
             path: ':season',
             component: ()=>import('../components/Wrapper.vue'),
             name: 'season-wrapper',
-            meta: { title: 'Wrapper' },
+            meta: { title: 'Temporada' },
             children: [
+              {
+                path: '',
+                component: ()=>import('../components/MatchdayViews/MatchDay.vue')
+              },
               {
                 path: ':matchday',
                 component: ()=>import('../components/MatchdayViews/MatchDay.vue'),

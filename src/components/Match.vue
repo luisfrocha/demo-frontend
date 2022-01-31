@@ -33,20 +33,24 @@
 
   const reduceScore = async (match, scorer) => {
     const scorerGoals = match.goals.filter(goal => goal.team_id === match[scorer].id);
-    await supabase
+    const { error } = await supabase
       .from('goal')
       .delete()
       .match({ id: scorerGoals[scorerGoals.length - 1].id });
+    if (!error) {
+      match.goals = match.goals.filter(goal => goal.id !== scorerGoals[scorerGoals.length - 1].id);
+    }
   };
 
   const saveNewScore = async () => {
     savingScore.value = true;
     try {
-      const { error } = await supabase.from('goal').insert(newScore.value).single();
+      const { error, data: goal } = await supabase.from('goal').insert(newScore.value).single();
       if (error) {
         console.log(error);
       } else {
         newScore.value = {};
+        match.value.goals.push(goal);
       }
     } catch (error) {
       console.log(error);

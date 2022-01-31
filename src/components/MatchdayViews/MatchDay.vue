@@ -1,16 +1,19 @@
 <script setup>
-  import { onMounted, ref, computed } from 'vue';
+  import { onMounted, ref, computed, onUnmounted, watchEffect } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { supabase } from '../../lib/supabase';
+  import { RefreshIcon } from '@heroicons/vue/outline';
 
   const route = useRoute();
   const router = useRouter();
 
   const matchdays = ref([]);
+  const teams = ref([]);
   const matchdaySubscription = ref(null);
-  const selectedMatchday = ref(route?.params?.matchday || null);
-
-  console.log(route);
+  const teamsSubscription = ref(null);
+  const goalsSubscription = ref([]);
+  const computedRoute = computed(() => route);
+  const loadingMatchdays = ref(true);
 
   const tabs = computed(() => [
     { name: 'Tabla', to: '', route_name: 'position_table', current: true },
@@ -19,12 +22,13 @@
   ]);
 
   const loadMatchdays = async () => {
+    loadingMatchdays.value = true;
     if (route.params.season) {
       try {
         const { error, data } = await supabase
           .from('matchday')
           .select(
-            'id,name,season_id,sort_order,matches:match(id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute))'
+            'id,name,season_id,sort_order,matches:match(id,match_dt,host_id,host:team!match_host_id_fkey(id,name,logo),visitor_id,visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute))'
           )
           .eq('season_id', route.params.season);
         if (error) {
@@ -37,33 +41,254 @@
         }
       } catch (error) {
         console.log(error);
+      } finally {
+        loadingMatchdays.value = false;
       }
     }
   };
 
-  onMounted(() => {
-    loadMatchdays();
-
-    //   matchdaySubscription.value = supabase
-    //     .from(`matchday:season_id=eq.${route.params.season}`)
-    //     .on('INSERT', payload => {
-    //       matchdays.value.push(payload.new);
-    //     })
-    //     .on('UPDATE', payload => {
-    //       const index = matchdays.value.findIndex(matchday => matchday.id === payload.new.id);
-    //       matchdays.value.splice(index, 1, payload.new);
-    //     })
-    //     .on('DELETE', payload => {
-    //       const index = matchdays.value.findIndex(matchday => matchday.id === payload.old.id);
-    //       matchdays.value.splice(index, 1);
-    //     })
-    //     .subscribe();
+  const matchesUpToMatchday = computed(() => {
+    const index = matchdays.value.findIndex(md => md.id === +route.params.matchday);
+    return matchdays.value.slice(0, index + 1);
   });
+
+  onMounted(async () => {
+    loadMatchdays();
+    try {
+      const { error, data: teamList } = await supabase
+        .from('team')
+        .select('id,name,logo')
+        .eq('league_id', route.params.league);
+      if (error) {
+        console.log(error);
+      } else {
+        teams.value = teamList.map(team => updateTeamNumbers(team));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    matchdaySubscription.value = supabase
+      .from(`matchday:season_id=eq.${route.params.season}`)
+      .on('INSERT', () => {
+        loadMatchdays();
+      })
+      .on('UPDATE', () => {
+        loadMatchdays();
+      })
+      .on('DELETE', () => {
+        loadMatchdays();
+      })
+      .subscribe();
+
+    teamsSubscription.value = supabase
+      .from(`team:league_id=eq.${computedRoute.value.params.league}`)
+      .on('INSERT', () => {
+        console.log('new team inserted');
+        loadMatchdays();
+      })
+      .on('UPDATE', () => {
+        loadMatchdays();
+      })
+      .on('DELETE', () => {
+        loadMatchdays();
+      })
+      .subscribe();
+  });
+
+  watchEffect(() => {
+    if (goalsSubscription.value.length) {
+      goalsSubscription.value.forEach(sub => {
+        supabase.removeSubscription(sub);
+      });
+      goalsSubscription.value = [];
+    }
+    matchesUpToMatchday.value.forEach(matchday => {
+      matchday.matches.forEach(match => {
+        const temp = supabase
+          .from(`goal:match_id=eq.${match.id}`)
+          .on('INSERT', payload => {
+            console.log(
+              matchdays.value.map(md => md.id),
+              payload.new.match_id
+            );
+            if (matchdays.value.map(md => md.id).includes(payload.new.match_id)) {
+              loadMatchdays();
+            }
+          })
+          .on('UPDATE', payload => {
+            console.log(
+              matchdays.value.map(md => md.id),
+              payload.new.match_id
+            );
+            if (matchdays.value.map(md => md.id).includes(payload.new.match_id)) {
+              loadMatchdays();
+            }
+          })
+          .on('DELETE', payload => {
+            console.log(
+              matchdays.value.map(md => md.id),
+              payload.old.match_id
+            );
+            if (matchdays.value.map(md => md.id).includes(payload.old.match_id)) {
+              loadMatchdays();
+            }
+          })
+          .subscribe();
+        goalsSubscription.value.push(temp);
+      });
+    });
+  });
+
+  onUnmounted(() => {
+    supabase.removeSubscription(matchdaySubscription.value);
+    supabase.removeSubscription(teamsSubscription.value);
+  });
+
+  watchEffect(() => {
+    teams.value = teams.value.map(team => updateTeamNumbers(team));
+  });
+
+  const updateTeamNumbers = team => {
+    team.host = {
+      matchesPlayed: matchesPlayed(team.id, 'host'),
+      matchesWon: matchesWon(team.id, 'host'),
+      matchesTied: matchesTied(team.id, 'host'),
+      matchesLost: matchesLost(team.id, 'host'),
+      goalsInFavor: goalsInFavor(team.id, 'host'),
+      goalsAgainst: goalsAgainst(team.id, 'host'),
+      goalDifference: goalDifference(team.id, 'host'),
+      pointsTotal: pointsTotal(team.id, 'host'),
+    };
+    team.visitor = {
+      matchesPlayed: matchesPlayed(team.id, 'visitor'),
+      matchesWon: matchesWon(team.id, 'visitor'),
+      matchesTied: matchesTied(team.id, 'visitor'),
+      matchesLost: matchesLost(team.id, 'visitor'),
+      goalsInFavor: goalsInFavor(team.id, 'visitor'),
+      goalsAgainst: goalsAgainst(team.id, 'visitor'),
+      goalDifference: goalDifference(team.id, 'visitor'),
+      pointsTotal: pointsTotal(team.id, 'visitor'),
+    };
+    team = {
+      ...team,
+      matchesPlayed: team.host.matchesPlayed + team.visitor.matchesPlayed,
+      matchesWon: team.host.matchesWon + team.visitor.matchesWon,
+      matchesTied: team.host.matchesTied + team.visitor.matchesTied,
+      matchesLost: team.host.matchesLost + team.visitor.matchesLost,
+      goalsInFavor: team.host.goalsInFavor + team.visitor.goalsInFavor,
+      goalsAgainst: team.host.goalsAgainst + team.visitor.goalsAgainst,
+      goalDifference: team.host.goalDifference + team.visitor.goalDifference,
+      pointsTotal: team.host.pointsTotal + team.visitor.pointsTotal,
+    };
+    return team;
+  };
+
+  const matchesPlayed = (teamId, type) => {
+    return matchesUpToMatchday.value
+      .map(day =>
+        day.matches.filter(match =>
+          type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+        )
+      )
+      .flat().length;
+  };
+  const matchesWon = (teamId, type) => {
+    return matchesUpToMatchday.value
+      .map(day =>
+        day.matches
+          .filter(match =>
+            type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+          )
+          .filter(match => {
+            const goalsFavor = match.goals.filter(goal => goal.team_id === teamId).length;
+            const goalsAgainst = match.goals.filter(goal => goal.team_id !== teamId).length;
+            return goalsFavor > goalsAgainst;
+          })
+      )
+      .flat().length;
+  };
+  const matchesTied = (teamId, type) => {
+    return matchesUpToMatchday.value
+      .map(day =>
+        day.matches
+          .filter(match =>
+            type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+          )
+          .filter(match => {
+            const goalsFavor = match.goals.filter(goal => goal.team_id === teamId).length;
+            const goalsAgainst = match.goals.filter(goal => goal.team_id !== teamId).length;
+            return goalsFavor === goalsAgainst;
+          })
+      )
+      .flat().length;
+  };
+  const matchesLost = (teamId, type) => {
+    return matchesUpToMatchday.value
+      .map(day =>
+        day.matches
+          .filter(match =>
+            type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+          )
+          .filter(match => {
+            const goalsFavor = match.goals.filter(goal => goal.team_id === teamId).length;
+            const goalsAgainst = match.goals.filter(goal => goal.team_id !== teamId).length;
+            return goalsFavor < goalsAgainst;
+          })
+      )
+      .flat().length;
+  };
+  const goalsInFavor = (teamId, type) => {
+    let goals = 0;
+    matchesUpToMatchday.value.forEach(day => {
+      day.matches
+        .filter(match =>
+          type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+        )
+        .forEach(match => {
+          goals += match.goals.filter(goal => goal.team_id === teamId).length;
+        });
+    });
+    return goals;
+  };
+  const goalsAgainst = (teamId, type) => {
+    let goals = 0;
+    matchesUpToMatchday.value.forEach(day => {
+      day.matches
+        .filter(match =>
+          type ? match[`${type}_id`] === teamId : match.host_id === teamId || match.visitor_id === teamId
+        )
+        .forEach(match => {
+          goals += match.goals.filter(goal => goal.team_id !== teamId).length;
+        });
+    });
+    return goals;
+  };
+  const goalDifference = (teamId, type) => {
+    return goalsInFavor(teamId, type) - goalsAgainst(teamId, type);
+  };
+  const pointsTotal = (teamId, type) => {
+    return matchesWon(teamId, type) * 3 + matchesTied(teamId, type);
+  };
+  const sortedTeam = computed(() =>
+    [...teams.value].sort((a, b) => {
+      // return b.pointsTotal + b.goalDifference + b.goalsInFavor - (a.pointsTotal + a.goalDifference + a.goalsInFavor);
+      return b.pointsTotal - a.pointsTotal
+        ? b.pointsTotal - a.pointsTotal
+        : b.goalDifference - a.goalDifference
+        ? b.goalDifference - a.goalDifference
+        : b.goalsInFavor - a.goalsInFavor
+        ? b.goalsInFavor - a.goalsInFavor
+        : b.goalsAgainst - a.goalsAgainst
+        ? b.goalsAgainst - a.goalsAgainst
+        : 0;
+    })
+  );
 </script>
 <template>
-  <div class="flex flex-col">
-    <div class="flex justify-center">Jornadas</div>
-    <nav class="relative z-0 inline-flex -space-x-px justify-center" aria-label="Pagination">
+  <div class="flex flex-col overflow-auto max-h-screen">
+    <nav class="sticky top-0 z-10 inline-flex -space-x-px justify-center bg-white p-1" aria-label="Pagination">
+      <div class="flex justify-center">Jornadas</div>
       <!-- Current: "z-10 bg-indigo-50 border-indigo-500 text-indigo-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
       <router-link
         v-for="(matchday, dayIndex) in matchdays"
@@ -80,6 +305,19 @@
       >
         {{ dayIndex + 1 }}
       </router-link>
+      <div>
+        <button
+          type="button"
+          :class="[
+            'relative inline-flex items-center px-2 py-1 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 h-full ml-2',
+            loadingMatchdays && 'pointer-events-none opacity-50',
+          ]"
+          :disabled="loadingMatchdays"
+          @click="loadMatchdays"
+        >
+          <RefreshIcon class="h-4 w-4" />
+        </button>
+      </div>
     </nav>
     <div>
       <div class="sm:hidden">
@@ -119,6 +357,6 @@
         </nav>
       </div>
     </div>
-    <router-view />
+    <router-view :table="sortedTeam" />
   </div>
 </template>

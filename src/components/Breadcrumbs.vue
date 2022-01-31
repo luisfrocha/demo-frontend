@@ -125,6 +125,9 @@
     selectedSeason.value = null;
     nextTick(() => {
       selectedLeague.value = null;
+      nextTick(() => {
+        router.push('/');
+      });
     });
   };
 
@@ -255,7 +258,7 @@
               leave-from="translate-x-0 opacity-100"
               leave-to="-translate-x-full opacity-0"
             >
-              <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedLeague = null">
+              <div class="absolute top-1/3 left-full cursor-pointer" @click="goHome">
                 <XCircleIcon class="ml-1 my-auto h-4 w-4" />
               </div>
             </TransitionRoot>
@@ -288,10 +291,10 @@
                       {{
                         loadingSeasons
                           ? 'Cargando temporadas...'
-                          : selectedSeason
+                          : route.params.season
                           ? selectedSeasonInfo.name
                           : seasons.length > 0
-                          ? selectedSeason
+                          ? route.params.season
                             ? ''
                             : 'Selecciona temporada'
                           : 'No hay temporadas disponibles'
@@ -322,7 +325,10 @@
                             active ? 'text-white bg-indigo-600' : 'text-gray-900',
                             'cursor-default select-none relative py-2 pl-3 pr-9',
                           ]"
-                          @click="router.push(`/${route.params.league}/${season.id}`)"
+                          @click="
+                            router.push(`/${route.params.league}/${season.id}`);
+                            seasonHovered = false;
+                          "
                         >
                           <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                             {{ season.name }}
@@ -344,7 +350,7 @@
                 </div>
               </Listbox>
               <TransitionRoot
-                v-if="selectedSeason"
+                v-if="route.params.season"
                 as="template"
                 :show="seasonHovered"
                 enter="transition duration-150"
@@ -354,7 +360,14 @@
                 leave-from="translate-x-0 opacity-100"
                 leave-to="-translate-x-full opacity-0"
               >
-                <div class="absolute top-1/3 left-full cursor-pointer" @click="selectedSeason = null">
+                <div
+                  class="absolute top-1/3 left-full cursor-pointer"
+                  @click="
+                    router.push(`/${route.params.league}`);
+                    selectedSeason = null;
+                    seasonHovered = false;
+                  "
+                >
                   <XCircleIcon class="ml-1 my-auto h-4 w-4" />
                 </div>
               </TransitionRoot>

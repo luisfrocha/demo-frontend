@@ -32,7 +32,7 @@
   const saveNewMatch = async () => {
     saveError.value = '';
     try {
-      let { error } = await supabase
+      let { error, data: newMatch } = await supabase
         .from('match')
         .insert({
           matchday_id: route.params.matchday,
@@ -45,6 +45,25 @@
         saveError.value = error.message;
       } else {
         cancelNewMatch();
+        try {
+          const { error, data: tempMatch } = await supabase
+            .from('match')
+            .select(
+              'id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute)'
+            )
+            .eq('id', newMatch.id)
+            .single();
+          if (error) {
+            loadError.value = error.message;
+          } else {
+            tempMatch.match_dt = parseISO(tempMatch.match_dt);
+            matches.value.push(tempMatch);
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          loadingMatches.value = false;
+        }
       }
     } catch (error) {
       console.log(error);
