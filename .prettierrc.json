@@ -1,0 +1,6 @@
+{
+  "singleQuote": true,
+  "vueIndentScriptAndStyle": true,
+  "printWidth": 120,
+  "arrowParens": "avoid"
+}

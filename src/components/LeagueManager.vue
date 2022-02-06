@@ -111,7 +111,9 @@
                       leagues.length === 0 && 'rounded-r-md pr-3',
                     ]"
                   >
-                    <div>{{ leagues.length > 0 ? 'Liga seleccionada:' : 'Añade la primer liga' }}</div>
+                    <div>
+                      {{ leagues.length > 0 ? 'Liga seleccionada:' : 'Añade la primer liga' }}
+                    </div>
                     <p v-if="leagues.length > 0" class="ml-2.5 text-sm font-medium">
                       {{ selectedLeague ? leagues.find(league => league.id === selectedLeague)?.name : '' }}
                     </p>

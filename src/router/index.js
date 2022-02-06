@@ -1,29 +1,29 @@
-import {createRouter, createWebHistory} from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 
 export const routes = [
   {
     path: '/admin',
     component: () => import('../pages/Admin.vue'),
     name: 'admin',
-    meta: {title: 'Administra Ligas'},
+    meta: { title: 'Administra Ligas' },
     children: [
       {
         path: '',
-        component: ()=>import('../components/LeagueManager.vue'),
+        component: () => import('../components/LeagueManager.vue'),
         name: 'league-selector',
         meta: { title: 'Seleccionar Liga' },
       },
       {
         path: ':league',
-        component: ()=>import('../components/LeagueManager.vue'),
+        component: () => import('../components/LeagueManager.vue'),
         name: 'league-editor',
-        meta: { title: 'Ligas'},
+        meta: { title: 'Ligas' },
         children: [
           {
             path: '',
             component: () => import('../components/SeasonManager.vue'),
             name: 'season-selector',
-            meta: {title: 'Selecciona Temporada'},
+            meta: { title: 'Selecciona Temporada' },
             children: [
               {
                 path: '',
@@ -31,47 +31,47 @@ export const routes = [
                 name: 'season-container',
                 meta: { title: 'Seleccionando temporada' },
               },
-            ]
+            ],
           },
           {
             path: 'teams',
-            component: ()=>import('../components/SeasonManager.vue'),
+            component: () => import('../components/SeasonManager.vue'),
             name: 'league-teams-editor',
             meta: { title: 'Editor de equipos' },
             children: [
               {
                 path: '',
-                component: ()=>import('../components/TeamManager.vue'),
+                component: () => import('../components/TeamManager.vue'),
                 name: 'teams-editor',
                 meta: { title: 'Editor de equipos' },
               },
-            ]
+            ],
           },
           {
             path: ':season',
             component: () => import('../components/SeasonManager.vue'),
             name: 'season-editor',
-            meta: {title: 'Editando Temporada'},
+            meta: { title: 'Editando Temporada' },
             children: [
               {
                 path: '',
                 component: () => import('../components/SeasonContainer.vue'),
                 name: 'season-selector-2',
-                meta: {title: 'Editando Temporada'},
+                meta: { title: 'Editando Temporada' },
                 children: [
                   {
                     path: ':matchday?',
-                    component: ()=>import('../components/MatchDayManager.vue'),
+                    component: () => import('../components/MatchDayManager.vue'),
                     name: 'matchday-manager',
-                    meta: {title: 'Selecciona Jornada'},
-                  }
-                ]
+                    meta: { title: 'Selecciona Jornada' },
+                  },
+                ],
               },
-            ]
+            ],
           },
-        ]
+        ],
       },
-    ]
+    ],
   },
   {
     path: '',
@@ -81,15 +81,15 @@ export const routes = [
       if (to.query.type === 'recovery') {
         next();
       } else {
-        next({name: 'matches', query: to.query});
+        next({ name: 'matches', query: to.query });
       }
     },
-    meta: { hideInMenu: true, title: 'Cambiar Contraseña' }
+    meta: { hideInMenu: true, title: 'Cambiar Contraseña' },
   },
   {
     path: '/',
     navPath: '/',
-    component: ()=>import('../pages/Home.vue'),
+    component: () => import('../pages/Home.vue'),
     name: 'Home',
     meta: { title: 'Ligas' },
   },
@@ -102,57 +102,57 @@ export const routes = [
     children: [
       {
         path: ':league',
-        component: ()=>import('../components/Wrapper.vue'),
+        component: () => import('../components/Wrapper.vue'),
         name: 'league-selected',
         meta: { title: 'Liga' },
         children: [
           {
             path: ':season',
-            component: ()=>import('../components/Wrapper.vue'),
+            component: () => import('../components/Wrapper.vue'),
             name: 'season-wrapper',
             meta: { title: 'Temporada' },
             children: [
               {
                 path: '',
-                component: ()=>import('../components/MatchdayViews/MatchDay.vue')
+                component: () => import('../components/MatchdayViews/MatchDay.vue'),
               },
               {
                 path: ':matchday',
-                component: ()=>import('../components/MatchdayViews/MatchDay.vue'),
+                component: () => import('../components/MatchdayViews/MatchDay.vue'),
                 name: 'matchday-selector',
                 meta: { title: 'Jornada' },
                 children: [
                   {
                     path: '',
                     name: 'position_table',
-                    component: ()=>import('../components/MatchdayViews/Table.vue'),
-                    meta: { title: 'Tabla General' }
+                    component: () => import('../components/MatchdayViews/Table.vue'),
+                    meta: { title: 'Tabla General' },
                   },
                   {
                     path: 'puntos',
                     name: 'points_graph',
-                    component: ()=>import('../components/MatchdayViews/Points.vue'),
-                    meta: { title: 'Puntos' }
+                    component: () => import('../components/MatchdayViews/Points.vue'),
+                    meta: { title: 'Puntos' },
                   },
                   {
                     path: 'posicion',
                     name: 'position_graph',
-                    component: ()=>import('../components/MatchdayViews/Positions.vue'),
-                    meta: { title: 'Posición' }
+                    component: () => import('../components/MatchdayViews/Positions.vue'),
+                    meta: { title: 'Posición' },
                   },
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
+  routes,
 });
 
 export default router;

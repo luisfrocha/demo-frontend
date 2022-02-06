@@ -25,7 +25,11 @@
   });
 
   const showNewScoreForm = (match, scorer) => {
-    newScore.value = { match_id: match.id, team_id: match[scorer].id, score_minute: null };
+    newScore.value = {
+      match_id: match.id,
+      team_id: match[scorer].id,
+      score_minute: null,
+    };
     nextTick(() => {
       scoreInput.value.focus();
     });
@@ -73,7 +77,9 @@
           :src="match.host.logo.replace(/^data:image\/[^;]+/, 'data:application/octet-stream')"
           :alt="match.host.name"
         />
-        <h3 class="mt-6 text-gray-900 text-sm font-medium">{{ match.host.name }}</h3>
+        <h3 class="mt-6 text-gray-900 text-sm font-medium">
+          {{ match.host.name }}
+        </h3>
       </div>
       <div class="flex-1 flex flex-col py-1">
         <img
@@ -81,7 +87,9 @@
           :src="match.visitor.logo.replace(/^data:image\/[^;]+/, 'data:application/octet-stream')"
           :alt="match.visitor.name"
         />
-        <h3 class="mt-6 text-gray-900 text-sm font-medium">{{ match.visitor.name }}</h3>
+        <h3 class="mt-6 text-gray-900 text-sm font-medium">
+          {{ match.visitor.name }}
+        </h3>
       </div>
       <div class="bg-white px-2 py-3 flex items-center justify-between border-t border-gray-200 sm:px-3 mx-auto w-full">
         <div class="flex-1 flex items-center justify-between w-full">
@@ -198,7 +206,9 @@
     </div>
     <dl class="mt-1 flex-grow flex flex-col justify-center align-center">
       <dt class="sr-only">Empieza</dt>
-      <dd class="text-gray-500 text-md font-bold">{{ format(match.match_dt, 'Pp') }}</dd>
+      <dd class="text-gray-500 text-md font-bold">
+        {{ format(match.match_dt, 'Pp') }}
+      </dd>
     </dl>
   </li>
 </template>

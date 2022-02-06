@@ -40,7 +40,11 @@
     try {
       let { error, data: newMatchday } = await supabase
         .from('matchday')
-        .insert({ name: matchdayName.value, season_id: selectedSeason.value, sort_order: matchdays.value.length + 1 })
+        .insert({
+          name: matchdayName.value,
+          season_id: selectedSeason.value,
+          sort_order: matchdays.value.length + 1,
+        })
         .single();
       if (error) {
         saveError.value = error.message;
@@ -117,7 +121,9 @@
                       matchdays.length === 0 && 'rounded-r-md pr-3',
                     ]"
                   >
-                    <div>{{ matchdays.length > 0 ? 'Jornada seleccionada:' : 'Añade la primer jornada' }}</div>
+                    <div>
+                      {{ matchdays.length > 0 ? 'Jornada seleccionada:' : 'Añade la primer jornada' }}
+                    </div>
                     <p v-if="matchdays.length > 0" class="ml-2.5 text-sm font-medium">
                       {{ matchdays.find(season => season.id === +route.params.matchday)?.name }}
                     </p>

@@ -10,7 +10,11 @@
   const navigation = ref(
     routes
       .filter(route => !!route.children)
-      .map(route => ({ name: route.name, to: route.navPath || route.path, meta: route.meta }))
+      .map(route => ({
+        name: route.name,
+        to: route.navPath || route.path,
+        meta: route.meta,
+      }))
       .flat()
   );
 </script>

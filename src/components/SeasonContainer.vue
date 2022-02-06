@@ -111,7 +111,9 @@
                       seasons.length === 0 && 'rounded-r-md pr-3',
                     ]"
                   >
-                    <div>{{ seasons.length > 0 ? 'Temporada seleccionada:' : 'Añade la primer temporada' }}</div>
+                    <div>
+                      {{ seasons.length > 0 ? 'Temporada seleccionada:' : 'Añade la primer temporada' }}
+                    </div>
                     <p v-if="seasons.length > 0" class="ml-2.5 text-sm font-medium">
                       {{ selectedSeason ? seasons.find(league => league.id === selectedSeason)?.name : '' }}
                     </p>

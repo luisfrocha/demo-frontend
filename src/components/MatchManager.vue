@@ -92,7 +92,10 @@
         if (error) {
           loadError.value = error.message;
         } else {
-          matches.value = tempMatches.map(match => ({ ...match, match_dt: parseISO(match.match_dt) }));
+          matches.value = tempMatches.map(match => ({
+            ...match,
+            match_dt: parseISO(match.match_dt),
+          }));
         }
       } catch (error) {
         console.log(error);
@@ -297,7 +300,9 @@
                             <div
                               class="relative w-full inline-flex items-center bg-indigo-500 py-2 pl-3 pr-4 border border-transparent rounded-l-md shadow-sm text-white"
                             >
-                              <p class="ml-2.5 text-sm font-medium">{{ newMatchHost.name }}</p>
+                              <p class="ml-2.5 text-sm font-medium">
+                                {{ newMatchHost.name }}
+                              </p>
                             </div>
                             <ListboxButton
                               class="relative inline-flex items-center bg-indigo-500 p-2 rounded-l-none rounded-r-md text-sm font-medium text-white hover:bg-indigo-600 focus:outline-none focus:z-10 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-indigo-500"
@@ -364,7 +369,9 @@
                             <div
                               class="relative w-full inline-flex items-center bg-indigo-500 py-2 pl-3 pr-4 border border-transparent rounded-l-md shadow-sm text-white"
                             >
-                              <p class="ml-2.5 text-sm font-medium">{{ newMatchVisitor.name }}</p>
+                              <p class="ml-2.5 text-sm font-medium">
+                                {{ newMatchVisitor.name }}
+                              </p>
                             </div>
                             <ListboxButton
                               class="relative inline-flex items-center bg-indigo-500 p-2 rounded-l-none rounded-r-md text-sm font-medium text-white hover:bg-indigo-600 focus:outline-none focus:z-10 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-indigo-500"
@@ -415,7 +422,9 @@
                   </h3>
                 </div>
               </div>
-              <div class="flex-1 flex flex-col px-6 py-3 grow-1 w-full"><Datepicker v-model="newMatchStart" /></div>
+              <div class="flex-1 flex flex-col px-6 py-3 grow-1 w-full">
+                <Datepicker v-model="newMatchStart" />
+              </div>
             </div>
             <div class="-mt-px flex divide-x divide-gray-200">
               <div class="w-0 flex-1 flex">

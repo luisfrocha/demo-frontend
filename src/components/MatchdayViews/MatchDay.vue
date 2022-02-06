@@ -17,8 +17,18 @@
 
   const tabs = computed(() => [
     { name: 'Tabla', to: '', route_name: 'position_table', current: true },
-    { name: 'Puntos', to: 'puntos', route_name: 'points_graph', current: false },
-    { name: 'Posiciones', to: 'posicion', route_name: 'position_graph', current: false },
+    {
+      name: 'Puntos',
+      to: 'puntos',
+      route_name: 'points_graph',
+      current: false,
+    },
+    {
+      name: 'Posiciones',
+      to: 'posicion',
+      route_name: 'position_graph',
+      current: false,
+    },
   ]);
 
   const loadMatchdays = async () => {
@@ -287,7 +297,10 @@
 </script>
 <template>
   <div class="flex flex-col overflow-auto max-h-screen">
-    <nav class="sticky top-0 z-10 inline-flex -space-x-px justify-center bg-white p-1" aria-label="Pagination">
+    <nav
+      class="sticky top-0 z-10 inline-flex -space-x-px justify-center items-center bg-white p-1"
+      aria-label="Pagination"
+    >
       <div class="flex justify-center">Jornadas</div>
       <!-- Current: "z-10 bg-indigo-50 border-indigo-500 text-indigo-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
       <router-link
@@ -328,7 +341,9 @@
           name="tabs"
           class="block w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"
         >
-          <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">{{ tab.name }}</option>
+          <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">
+            {{ tab.name }}
+          </option>
         </select>
       </div>
       <div class="hidden sm:block">

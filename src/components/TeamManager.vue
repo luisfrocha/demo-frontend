@@ -22,7 +22,11 @@
     try {
       let { error } = await supabase
         .from('team')
-        .insert({ name: newTeamName.value, league_id: selectedLeague.value, logo: newTeamLogo.value })
+        .insert({
+          name: newTeamName.value,
+          league_id: selectedLeague.value,
+          logo: newTeamLogo.value,
+        })
         .single();
       if (error) {
         saveError.value = error.message;
@@ -135,7 +139,9 @@
               :src="team.logo.replace(/^data:image\/[^;]+/, 'data:application/octet-stream')"
               :alt="team.name"
             />
-            <h3 class="mt-6 text-gray-900 text-sm font-medium">{{ team.name }}</h3>
+            <h3 class="mt-6 text-gray-900 text-sm font-medium">
+              {{ team.name }}
+            </h3>
           </div>
         </li>
         <TransitionRoot

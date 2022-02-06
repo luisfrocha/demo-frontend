@@ -39,14 +39,14 @@ async function handleSignup(credentials) {
       return;
     }
     const result = await supabase.auth.signUp({ email, password });
-    const {error, user} = result;
+    const { error, user } = result;
     if (error) {
       // alert(error.message)
       console.error(error, error.message);
-      return {error: error.message};
+      return { error: error.message };
     }
-    if(user){
-      return {user};
+    if (user) {
+      return { user };
     }
     // alert('Signup successful, confirmation mail should be sent soon!')
   } catch (err) {
@@ -72,7 +72,9 @@ async function handlePasswordReset(redirectTo) {
   if (!email) {
     window.alert('Email address is required.');
   } else {
-    const { error } = await supabase.auth.api.resetPasswordForEmail(email, {redirectTo});
+    const { error } = await supabase.auth.api.resetPasswordForEmail(email, {
+      redirectTo,
+    });
     if (error) {
       alert('Error: ' + error.message);
     } else {

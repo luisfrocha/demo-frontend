@@ -5,8 +5,16 @@
   const route = useRoute();
 
   const tabs = computed(() => [
-    { name: 'Temporadas', to: `/admin/${route.params.league}`, current: route.name !== 'teams-editor' },
-    { name: 'Equipos', to: `/admin/${route.params.league}/teams`, current: route.name === 'teams-editor' },
+    {
+      name: 'Temporadas',
+      to: `/admin/${route.params.league}`,
+      current: route.name !== 'teams-editor',
+    },
+    {
+      name: 'Equipos',
+      to: `/admin/${route.params.league}/teams`,
+      current: route.name === 'teams-editor',
+    },
   ]);
 </script>
 <template>

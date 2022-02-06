@@ -6,18 +6,7 @@
         <input
           v-model="password"
           type="password"
-          class="
-            block
-            appearance-none
-            w-full
-            bg-white
-            border border-grey-light
-            hover:border-grey
-            px-2
-            py-2
-            rounded
-            shadow
-          "
+          class="block appearance-none w-full bg-white border border-grey-light hover:border-grey px-2 py-2 rounded shadow"
           placeholder="Your password"
         />
       </div>
@@ -31,7 +20,7 @@
   </main>
 </template>
 
-<script setup lang="ts">
+<script setup>
   const name = 'Auth';
   import { ref } from 'vue';
   import { handleUpdateUser } from '../vuetils/useAuth';

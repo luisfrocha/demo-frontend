@@ -44,6 +44,8 @@
       file.value = null;
     "
   />
-  <button v-else @click="file.click()"><PhotographIcon class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl" /></button>
+  <button v-else @click="file.click()">
+    <PhotographIcon class="w-32 h-32 flex-shrink-0 mx-auto rounded-xl" />
+  </button>
   <input ref="file" type="file" @change="onChange($event)" class="hidden" />
 </template>
