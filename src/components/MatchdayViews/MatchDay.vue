@@ -3,6 +3,7 @@
   import { useRoute, useRouter } from 'vue-router';
   import { supabase } from '../../lib/supabase';
   import { RefreshIcon } from '@heroicons/vue/outline';
+  import { debounce } from 'lodash-es';
 
   const route = useRoute();
   const router = useRouter();
@@ -14,15 +15,18 @@
   const goalsSubscription = ref([]);
   const computedRoute = computed(() => route);
   const loadingMatchdays = ref(true);
+  const mainContainer = ref(null);
+  const pageWidth = ref(0);
+
+  const matchView = computed(() => ({
+    get: () => (route.name === 'position_graph' ? 'posicion' : 'tabla'),
+    set: val => {
+      console.log(val);
+    },
+  }));
 
   const tabs = computed(() => [
     { name: 'Tabla', to: '', route_name: 'position_table', current: true },
-    {
-      name: 'Puntos',
-      to: 'puntos',
-      route_name: 'points_graph',
-      current: false,
-    },
     {
       name: 'Posiciones',
       to: 'posicion',
@@ -38,7 +42,7 @@
         const { error, data } = await supabase
           .from('matchday')
           .select(
-            'id,name,season_id,sort_order,matches:match(id,match_dt,host_id,host:team!match_host_id_fkey(id,name,logo),visitor_id,visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute))'
+            'id,name,season_id,sort_order,matches:match(id,match_dt,host_id,host:team!match_host_id_fkey(id,name,logo,color),visitor_id,visitor:team!match_visitor_id_fkey(id,name,logo,color),goals:goal(id,team_id,score_minute))'
           )
           .eq('season_id', route.params.season);
         if (error) {
@@ -62,12 +66,19 @@
     return matchdays.value.slice(0, index + 1);
   });
 
+  const resizeChart = () => {
+    if (mainContainer.value) {
+      pageWidth.value = mainContainer.value.offsetWidth;
+    }
+  };
+
   onMounted(async () => {
-    loadMatchdays();
+    window.addEventListener('resize', debounce(resizeChart, 250));
+    resizeChart();
     try {
       const { error, data: teamList } = await supabase
         .from('team')
-        .select('id,name,logo')
+        .select('id,name,logo,color')
         .eq('league_id', route.params.league);
       if (error) {
         console.log(error);
@@ -77,6 +88,7 @@
     } catch (error) {
       console.log(error);
     }
+    loadMatchdays();
 
     matchdaySubscription.value = supabase
       .from(`matchday:season_id=eq.${route.params.season}`)
@@ -153,6 +165,7 @@
   onUnmounted(() => {
     supabase.removeSubscription(matchdaySubscription.value);
     supabase.removeSubscription(teamsSubscription.value);
+    window.removeEventListener('resize', debounce(resizeChart, 250));
   });
 
   watchEffect(() => {
@@ -203,6 +216,7 @@
       )
       .flat().length;
   };
+
   const matchesWon = (teamId, type) => {
     return matchesUpToMatchday.value
       .map(day =>
@@ -218,6 +232,7 @@
       )
       .flat().length;
   };
+
   const matchesTied = (teamId, type) => {
     return matchesUpToMatchday.value
       .map(day =>
@@ -233,6 +248,7 @@
       )
       .flat().length;
   };
+
   const matchesLost = (teamId, type) => {
     return matchesUpToMatchday.value
       .map(day =>
@@ -248,6 +264,7 @@
       )
       .flat().length;
   };
+
   const goalsInFavor = (teamId, type) => {
     let goals = 0;
     matchesUpToMatchday.value.forEach(day => {
@@ -261,6 +278,7 @@
     });
     return goals;
   };
+
   const goalsAgainst = (teamId, type) => {
     let goals = 0;
     matchesUpToMatchday.value.forEach(day => {
@@ -274,26 +292,29 @@
     });
     return goals;
   };
+
   const goalDifference = (teamId, type) => {
     return goalsInFavor(teamId, type) - goalsAgainst(teamId, type);
   };
+
   const pointsTotal = (teamId, type) => {
     return matchesWon(teamId, type) * 3 + matchesTied(teamId, type);
   };
-  const sortedTeam = computed(() =>
-    [...teams.value].sort((a, b) => {
-      // return b.pointsTotal + b.goalDifference + b.goalsInFavor - (a.pointsTotal + a.goalDifference + a.goalsInFavor);
-      return b.pointsTotal - a.pointsTotal
-        ? b.pointsTotal - a.pointsTotal
-        : b.goalDifference - a.goalDifference
-        ? b.goalDifference - a.goalDifference
-        : b.goalsInFavor - a.goalsInFavor
-        ? b.goalsInFavor - a.goalsInFavor
-        : b.goalsAgainst - a.goalsAgainst
-        ? b.goalsAgainst - a.goalsAgainst
-        : 0;
-    })
-  );
+
+  const sortTeamPosition = (a, b) => {
+    // return b.pointsTotal + b.goalDifference + b.goalsInFavor - (a.pointsTotal + a.goalDifference + a.goalsInFavor);
+    return b.pointsTotal - a.pointsTotal
+      ? b.pointsTotal - a.pointsTotal
+      : b.goalDifference - a.goalDifference
+      ? b.goalDifference - a.goalDifference
+      : b.goalsInFavor - a.goalsInFavor
+      ? b.goalsInFavor - a.goalsInFavor
+      : b.goalsAgainst - a.goalsAgainst
+      ? b.goalsAgainst - a.goalsAgainst
+      : 0;
+  };
+
+  const sortedTeams = computed(() => [...teams.value].sort(sortTeamPosition));
 </script>
 <template>
   <div class="flex flex-col overflow-auto max-h-screen">
@@ -301,12 +322,14 @@
       class="sticky top-0 z-10 inline-flex -space-x-px justify-center items-center bg-white p-1"
       aria-label="Pagination"
     >
-      <div class="flex justify-center">Jornadas</div>
+      <div class="flex justify-center mr-2">Jornadas</div>
       <!-- Current: "z-10 bg-indigo-50 border-indigo-500 text-indigo-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
       <router-link
         v-for="(matchday, dayIndex) in matchdays"
         :key="matchday.id"
-        :to="`/${route.params.league}/${route.params.season}/${matchday.id}`"
+        :to="`/${route.params.league}/${route.params.season}/${matchday.id}${
+          route.name === 'position_graph' ? '/posicion' : ''
+        }`"
         aria-current="page"
         :class="[
           'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
@@ -334,14 +357,15 @@
     </nav>
     <div>
       <div class="sm:hidden">
-        <label for="tabs" class="sr-only">Select a tab</label>
+        <label for="tabs" class="sr-only">Selecciona vista</label>
         <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
         <select
           id="tabs"
           name="tabs"
           class="block w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"
+          v-model="matchView"
         >
-          <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">
+          <option v-for="tab in tabs" :key="tab.name" :selected="tab.current" :value="tab.name">
             {{ tab.name }}
           </option>
         </select>
@@ -372,6 +396,6 @@
         </nav>
       </div>
     </div>
-    <router-view :table="sortedTeam" />
+    <router-view :table="sortedTeams" />
   </div>
 </template>

@@ -129,12 +129,6 @@ export const routes = [
                     meta: { title: 'Tabla General' },
                   },
                   {
-                    path: 'puntos',
-                    name: 'points_graph',
-                    component: () => import('../components/MatchdayViews/Points.vue'),
-                    meta: { title: 'Puntos' },
-                  },
-                  {
                     path: 'posicion',
                     name: 'position_graph',
                     component: () => import('../components/MatchdayViews/Positions.vue'),
