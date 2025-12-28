@@ -1,101 +1,63 @@
 <script setup>
-  import { TransitionRoot, Listbox, ListboxOptions, ListboxOption, ListboxButton, ListboxLabel } from '@headlessui/vue';
-  import { ref, onMounted, onUnmounted, computed, nextTick, watch, toRefs } from 'vue';
-  import { PhotographIcon, ChevronDownIcon, CheckIcon } from '@heroicons/vue/outline';
-  import { format, parseISO } from 'date-fns';
-  import { PlusIcon, MinusIcon, RefreshIcon } from '@heroicons/vue/solid';
-  import Datepicker from 'vue3-date-time-picker';
-  import 'vue3-date-time-picker/dist/main.css';
-  import { supabase } from '../lib/supabase';
-  import { useRoute } from 'vue-router';
-  import Match from './Match.vue';
+import {TransitionRoot, Listbox, ListboxOptions, ListboxOption, ListboxButton, ListboxLabel} from '@headlessui/vue';
+import {ref, onMounted, onUnmounted, computed, nextTick, watch, toRefs} from 'vue';
+import {PhotographIcon, ChevronDownIcon, CheckIcon} from '@heroicons/vue/outline';
+import {format, parseISO} from 'date-fns';
+import {PlusIcon, MinusIcon, RefreshIcon} from '@heroicons/vue/solid';
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import {supabase} from '../lib/supabase';
+import {useRoute} from 'vue-router';
+import Match from './Match.vue';
 
-  const props = defineProps({ matchday: { type: Object, required: true } });
-  const { matchday } = toRefs(props);
+const props = defineProps({matchday: {type: Object, required: true}});
+const {matchday} = toRefs(props);
 
-  const route = useRoute();
-  const loadingMatches = ref(true);
-  const loadingTeams = ref(true);
-  const loadError = ref('');
-  const saveError = ref('');
-  const matchesSubscription = ref(null);
-  const teamsSubscription = ref(null);
-  const goalsSubscription = ref(null);
-  const showNewMatchForm = ref(false);
-  const matches = ref([]);
-  const teams = ref([]);
-  const newMatchHostId = ref(null);
-  const newMatchVisitorId = ref(null);
-  const newMatchStart = ref(null);
-  const newMatchContainerRef = ref(null);
+const route = useRoute();
+const loadingMatches = ref(true);
+const loadingTeams = ref(true);
+const loadError = ref('');
+const saveError = ref('');
+const matchesSubscription = ref(null);
+const teamsSubscription = ref(null);
+const goalsSubscription = ref(null);
+const showNewMatchForm = ref(false);
+const matches = ref([]);
+const teams = ref([]);
+const newMatchHostId = ref(null);
+const newMatchVisitorId = ref(null);
+const newMatchStart = ref(null);
+const newMatchContainerRef = ref(null);
 
-  const saveNewMatch = async () => {
-    saveError.value = '';
-    try {
-      let { error, data: newMatch } = await supabase
-        .from('match')
-        .insert({
-          matchday_id: route.params.matchday,
-          host_id: newMatchHostId.value,
-          visitor_id: newMatchVisitorId.value,
-          match_dt: newMatchStart.value,
-        })
-        .single();
-      if (error) {
-        saveError.value = error.message;
-      } else {
-        cancelNewMatch();
-        try {
-          const { error, data: tempMatch } = await supabase
-            .from('match')
-            .select(
-              'id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute)'
-            )
-            .eq('id', newMatch.id)
-            .single();
-          if (error) {
-            loadError.value = error.message;
-          } else {
-            tempMatch.match_dt = parseISO(tempMatch.match_dt);
-            matches.value.push(tempMatch);
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          loadingMatches.value = false;
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  watch(route, val => {
-    if (val.params.matchday) {
-      loadMatches();
-    }
-  });
-
-  const loadMatches = async () => {
-    loadError.value = '';
-    loadingMatches.value = true;
-    if (route.params.matchday) {
+const saveNewMatch = async () => {
+  saveError.value = '';
+  try {
+    let {error, data: newMatch} = await supabase
+      .from('match')
+      .insert({
+        matchday_id: route.params.matchday,
+        host_id: newMatchHostId.value,
+        visitor_id: newMatchVisitorId.value,
+        match_dt: newMatchStart.value,
+      })
+      .single();
+    if (error) {
+      saveError.value = error.message;
+    } else {
+      cancelNewMatch();
       try {
-        const { error, data: tempMatches } = await supabase
+        const {error, data: tempMatch} = await supabase
           .from('match')
           .select(
             'id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute)'
           )
-          .eq('matchday_id', route.params.matchday)
-          .order('match_dt', { ascending: true })
-          .order('score_minute', { foreignTable: 'goal', ascending: true });
+          .eq('id', newMatch.id)
+          .single();
         if (error) {
           loadError.value = error.message;
         } else {
-          matches.value = tempMatches.map(match => ({
-            ...match,
-            match_dt: parseISO(match.match_dt),
-          }));
+          tempMatch.match_dt = parseISO(tempMatch.match_dt);
+          matches.value.push(tempMatch);
         }
       } catch (error) {
         console.log(error);
@@ -103,123 +65,161 @@
         loadingMatches.value = false;
       }
     }
-  };
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-  onMounted(async () => {
+watch(route, val => {
+  if (val.params.matchday) {
     loadMatches();
-    loadError.value = '';
+  }
+});
+
+const loadMatches = async () => {
+  loadError.value = '';
+  loadingMatches.value = true;
+  if (route.params.matchday) {
     try {
-      const { error, data: tempTeams } = await supabase
-        .from('team')
-        .select('id,name,logo')
-        .eq('league_id', route.params.league);
+      const {error, data: tempMatches} = await supabase
+        .from('match')
+        .select(
+          'id,match_dt,host:team!match_host_id_fkey(id,name,logo),visitor:team!match_visitor_id_fkey(id,name,logo),goals:goal(id,team_id,score_minute)'
+        )
+        .eq('matchday_id', route.params.matchday)
+        .order('match_dt', {ascending: true})
+        .order('score_minute', {foreignTable: 'goal', ascending: true});
       if (error) {
         loadError.value = error.message;
       } else {
-        teams.value = tempTeams;
+        matches.value = tempMatches.map(match => ({
+          ...match,
+          match_dt: parseISO(match.match_dt),
+        }));
       }
     } catch (error) {
       console.log(error);
     } finally {
-      loadingTeams.value = false;
+      loadingMatches.value = false;
     }
+  }
+};
 
-    matchesSubscription.value = supabase
-      .from(`match:matchday_id=eq.${route.params.matchday}`)
-      .on('INSERT', payload => {
-        payload.new.host = teams.value.find(team => team.id === payload.new.host_id);
-        payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor_id);
-        payload.new.match_dt = parseISO(payload.new.match_dt);
-        payload.new.goals = [];
-        matches.value.push(payload.new);
-      })
-      .on('UPDATE', async payload => {
-        payload.new.host = teams.value.find(team => team.id === payload.new.host);
-        payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
-        payload.new.match_dt = parseISO(payload.new.match_dt);
-        payload.new.goals = await supabase
-          .from('goal')
-          .select('id,team_id,score_minute')
-          .eq('match_id', payload.new.id);
-        const index = matches.value.findIndex(match => match.id === payload.new.id);
-        matches.value.splice(index, 1, payload.new);
-      })
-      .on('DELETE', payload => {
-        console.log('removing', payload.old.id);
-        const index = matches.value.findIndex(match => match.id === payload.old.id);
-        matches.value.splice(index, 1);
-      })
-      .subscribe();
-
-    teamsSubscription.value = supabase
-      .from(`team:league_id=eq.${route.params.league}`)
-      .on('INSERT', payload => {
-        teams.value.push(payload.new);
-      })
-      .on('UPDATE', payload => {
-        matches.value = matches.value.map(match => {
-          if (match.host.id === payload.new.id) {
-            match.host = payload.new;
-          }
-          if (match.visitor.id === payload.new.id) {
-            match.visitor = payload.new;
-          }
-          return match;
-        });
-        const index = teams.value.findIndex(team => team.id === payload.new.id);
-        teams.value.splice(index, 1, payload.new);
-      })
-      .on('DELETE', payload => {
-        const index = teams.value.findIndex(team => team.id === payload.old.id);
-        teams.value.splice(index, 1);
-      })
-      .subscribe();
-  });
-
-  onUnmounted(() => {
-    if (matchesSubscription.value) {
-      supabase.removeSubscription(matchesSubscription.value);
+onMounted(async () => {
+  loadMatches();
+  loadError.value = '';
+  try {
+    const {error, data: tempTeams} = await supabase
+      .from('team')
+      .select('id,name,logo')
+      .eq('league_id', route.params.league);
+    if (error) {
+      loadError.value = error.message;
+    } else {
+      teams.value = tempTeams;
     }
-    if (teamsSubscription.value) {
-      supabase.removeSubscription(teamsSubscription.value);
-    }
-  });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loadingTeams.value = false;
+  }
 
-  const activateNewMatchForm = () => {
-    newMatchHostId.value = null;
-    newMatchVisitorId.value = null;
-    showNewMatchForm.value = true;
-    nextTick(() => {
-      const container = document.getElementById('new_match');
-      window.scrollTo({
-        top: container.offsetTop,
-        left: container.offsetLeft,
-        behavior: 'smooth',
+  matchesSubscription.value = supabase
+    .from(`match:matchday_id=eq.${route.params.matchday}`)
+    .on('INSERT', payload => {
+      payload.new.host = teams.value.find(team => team.id === payload.new.host_id);
+      payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor_id);
+      payload.new.match_dt = parseISO(payload.new.match_dt);
+      payload.new.goals = [];
+      matches.value.push(payload.new);
+    })
+    .on('UPDATE', async payload => {
+      payload.new.host = teams.value.find(team => team.id === payload.new.host);
+      payload.new.visitor = teams.value.find(team => team.id === payload.new.visitor);
+      payload.new.match_dt = parseISO(payload.new.match_dt);
+      payload.new.goals = await supabase
+        .from('goal')
+        .select('id,team_id,score_minute')
+        .eq('match_id', payload.new.id);
+      const index = matches.value.findIndex(match => match.id === payload.new.id);
+      matches.value.splice(index, 1, payload.new);
+    })
+    .on('DELETE', payload => {
+      console.log('removing', payload.old.id);
+      const index = matches.value.findIndex(match => match.id === payload.old.id);
+      matches.value.splice(index, 1);
+    })
+    .subscribe();
+
+  teamsSubscription.value = supabase
+    .from(`team:league_id=eq.${route.params.league}`)
+    .on('INSERT', payload => {
+      teams.value.push(payload.new);
+    })
+    .on('UPDATE', payload => {
+      matches.value = matches.value.map(match => {
+        if (match.host.id === payload.new.id) {
+          match.host = payload.new;
+        }
+        if (match.visitor.id === payload.new.id) {
+          match.visitor = payload.new;
+        }
+        return match;
       });
+      const index = teams.value.findIndex(team => team.id === payload.new.id);
+      teams.value.splice(index, 1, payload.new);
+    })
+    .on('DELETE', payload => {
+      const index = teams.value.findIndex(team => team.id === payload.old.id);
+      teams.value.splice(index, 1);
+    })
+    .subscribe();
+});
+
+onUnmounted(() => {
+  if (matchesSubscription.value) {
+    supabase.removeSubscription(matchesSubscription.value);
+  }
+  if (teamsSubscription.value) {
+    supabase.removeSubscription(teamsSubscription.value);
+  }
+});
+
+const activateNewMatchForm = () => {
+  newMatchHostId.value = null;
+  newMatchVisitorId.value = null;
+  showNewMatchForm.value = true;
+  nextTick(() => {
+    const container = document.getElementById('new_match');
+    window.scrollTo({
+      top: container.offsetTop,
+      left: container.offsetLeft,
+      behavior: 'smooth',
     });
-  };
-  const cancelNewMatch = () => {
-    newMatchHostId.value = null;
-    newMatchVisitorId.value = null;
-    showNewMatchForm.value = false;
-  };
-
-  const newMatchHost = computed(() => {
-    return newMatchHostId.value ? teams.value.find(team => team.id === newMatchHostId.value) : {};
   });
-  const selectedTeams = computed(() => matches.value.map(match => [match.host.id, match.visitor.id]).flat());
+};
+const cancelNewMatch = () => {
+  newMatchHostId.value = null;
+  newMatchVisitorId.value = null;
+  showNewMatchForm.value = false;
+};
 
-  const filteredHostTeams = computed(() => {
-    return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchVisitorId.value);
-  });
+const newMatchHost = computed(() => {
+  return newMatchHostId.value ? teams.value.find(team => team.id === newMatchHostId.value) : {};
+});
+const selectedTeams = computed(() => matches.value.map(match => [match.host.id, match.visitor.id]).flat());
 
-  const newMatchVisitor = computed(() => {
-    return newMatchVisitorId.value ? teams.value.find(team => team.id === newMatchVisitorId.value) : {};
-  });
+const filteredHostTeams = computed(() => {
+  return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchVisitorId.value);
+});
 
-  const filteredVisitorTeams = computed(() => {
-    return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchHostId.value);
-  });
+const newMatchVisitor = computed(() => {
+  return newMatchVisitorId.value ? teams.value.find(team => team.id === newMatchVisitorId.value) : {};
+});
+
+const filteredVisitorTeams = computed(() => {
+  return teams.value.filter(team => !selectedTeams.value.includes(team.id) && team.id !== newMatchHostId.value);
+});
 </script>
 <template>
   <div class="bg-white shadow rounded-lg divide-y divide-gray-200">
@@ -326,7 +326,7 @@
                               v-for="option in filteredHostTeams"
                               :key="option.id"
                               :value="option.id"
-                              v-slot="{ active, selected }"
+                              v-slot="{active, selected}"
                             >
                               <li
                                 :class="[
@@ -395,7 +395,7 @@
                               v-for="option in filteredVisitorTeams"
                               :key="option.id"
                               :value="option.id"
-                              v-slot="{ active, selected }"
+                              v-slot="{active, selected}"
                             >
                               <li
                                 :class="[
@@ -455,7 +455,7 @@
   </div>
 </template>
 <style>
-  .match-input {
-    width: calc(100% + 1.8rem) !important;
-  }
+.match-input {
+  width: calc(100% + 1.8rem) !important;
+}
 </style>
