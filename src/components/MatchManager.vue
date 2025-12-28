@@ -4,7 +4,7 @@ import {ref, onMounted, onUnmounted, computed, nextTick, watch, toRefs} from 'vu
 import {PhotographIcon, ChevronDownIcon, CheckIcon} from '@heroicons/vue/outline';
 import {format, parseISO} from 'date-fns';
 import {PlusIcon, MinusIcon, RefreshIcon} from '@heroicons/vue/solid';
-import Datepicker from '@vuepic/vue-datepicker';
+import {VueDatePicker} from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import {supabase} from '../lib/supabase';
 import {useRoute} from 'vue-router';
@@ -423,7 +423,7 @@ const filteredVisitorTeams = computed(() => {
                 </div>
               </div>
               <div class="flex-1 flex flex-col px-6 py-3 grow-1 w-full">
-                <Datepicker v-model="newMatchStart" />
+                <VueDatepicker v-model="newMatchStart" />
               </div>
             </div>
             <div class="-mt-px flex divide-x divide-gray-200">
