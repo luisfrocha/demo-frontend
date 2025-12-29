@@ -30,7 +30,7 @@ importers:
         specifier: ^2.5.1
         version: 2.8.8
       vue:
-        specifier: ^3.2.25
+        specifier: ^3.5.26
         version: 3.5.26
       vue-router:
         specifier: '4'

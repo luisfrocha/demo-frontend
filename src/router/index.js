@@ -115,6 +115,7 @@ export const routes = [
               {
                 path: '',
                 component: () => import('../components/MatchdayViews/MatchDay.vue'),
+                name: 'season-wrapper-main',
               },
               {
                 path: ':matchday',

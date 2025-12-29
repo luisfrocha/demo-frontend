@@ -26,7 +26,7 @@
         class="bg-gray-500 border-b border-gray-400 border-opacity-25 lg:border-none"
         v-slot="{ open }"
       >
-        <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div class="max-w-8xl mx-auto px-2 sm:px-4 lg:px-8">
           <div
             class="relative h-16 flex items-center justify-between lg:border-b lg:border-gray-300 lg:border-opacity-25"
           >
@@ -84,14 +84,14 @@
         </DisclosurePanel>
       </Disclosure>
       <header class="py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 class="text-3xl font-bold text-white">{{ route.meta.title }}</h1>
         </div>
       </header>
     </div>
 
     <main class="-mt-12">
-      <div class="max-w-7xl mx-auto pb-12 px-1 sm:px-3 lg:px-4">
+      <div class="max-w-8xl mx-auto pb-12 px-1 sm:px-3 lg:px-4">
         <div class="bg-white rounded-lg shadow p-2 graph-container-div">
           <router-view />
         </div>

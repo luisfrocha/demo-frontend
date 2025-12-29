@@ -182,6 +182,6 @@
 </template>
 <style>
   .flip-list-move {
-    transition: transform 0.8s ease;
+    transition: transform 0.4s ease;
   }
 </style>
